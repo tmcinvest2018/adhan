@@ -278,13 +278,22 @@ export default function App() {
                 <span className="font-medium text-sm hidden sm:inline">{t.tabs.prayers}</span>
             </button>
             
-            <button 
-                onClick={() => setActiveTab('ilmhub')}
-                className={`flex-[1.5] flex items-center justify-center gap-2 py-3 rounded-xl transition-all duration-300 ${(activeTab === 'ilmhub' || activeTab === 'quran') ? 'bg-emerald-600 text-white shadow-md' : 'text-gray-500 hover:bg-gray-100'}`}
-            >
-                <GraduationCap size={20} />
-                <span className="font-medium text-sm hidden sm:inline">{t.ilmhub.title || "IlmHub"}</span>
-            </button>
+            {/* IlmHub - TEMPORARILY DISABLED */}
+            <div className="flex-[1.5] relative group flex justify-center">
+                <button 
+                    disabled
+                    className="w-full flex items-center justify-center gap-2 py-3 rounded-xl transition-all duration-300 bg-gray-50 text-gray-400 cursor-not-allowed opacity-70"
+                >
+                    <GraduationCap size={20} />
+                    <span className="font-medium text-sm hidden sm:inline">{t.ilmhub.title || "IlmHub"}</span>
+                </button>
+                {/* Info Balloon / Tooltip */}
+                <div className="absolute bottom-full mb-3 left-1/2 -translate-x-1/2 bg-gray-800 text-white text-xs font-medium px-3 py-1.5 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap shadow-lg z-50">
+                    🚧 Under Construction
+                    {/* Small arrow pointing down */}
+                    <div className="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-gray-800"></div>
+                </div>
+            </div>
             
             <button 
                 onClick={() => setActiveTab('qibla')}
