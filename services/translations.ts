@@ -1,7 +1,7 @@
 
 export const translations: Record<string, any> = {
   en: {
-    appTitle: "IbaDawah",
+    appTitle: "NurPrayer",
     prayers: {
       fajr: "Fajr",
       sunrise: "Sunrise",
@@ -26,6 +26,7 @@ export const translations: Record<string, any> = {
     },
     ilmhub: {
       title: "Al-Noor Knowledge",
+      comingSoon: "Coming Soon (Under Development)",
       tabs: {
         feed: "Feed",
         library: "Library",
@@ -133,7 +134,7 @@ export const translations: Record<string, any> = {
     }
   },
   nl: {
-    appTitle: "IbaDawah",
+    appTitle: "NurPrayer",
     prayers: {
       fajr: "Fajr",
       sunrise: "Zonsopkomst",
@@ -158,6 +159,7 @@ export const translations: Record<string, any> = {
     },
     ilmhub: {
       title: "Al-Noor Kenniscentrum",
+      comingSoon: "Binnenkort beschikbaar (In ontwikkeling)",
       tabs: {
         feed: "Tijdlijn",
         library: "Bibliotheek",
@@ -270,6 +272,7 @@ export const translations: Record<string, any> = {
       tabs: { prayers: "أوقات الصلاة", qibla: "القبلة", quran: "القرآن", dhikr: "الذكر", ilmhub: "العلم" },
        ilmhub: {
         title: "مركز النور للمعرفة",
+        comingSoon: "قريبا (تحت التطوير)",
         tabs: { feed: "الموجز", library: "المكتبة", media: "الوسائط", ai: "اسأل الذكاء" },
         feed: { daily: "حكمة اليوم", reminder: "تذكير", featured: "نص مختار" },
         library: { search: "بحث في المكتبة...", categories: "التصنيفات", read: "قراءة", download: "متاح دون اتصال" },
@@ -286,10 +289,11 @@ export const translations: Record<string, any> = {
       errors: { location: "مرفوض", fetchQuran: "خطأ" }
   },
   tr: {
-      appTitle: "IbaDawah",
+      appTitle: "NurPrayer",
       tabs: { prayers: "Namaz", qibla: "Kıble", quran: "Kuran", dhikr: "Zikir", ilmhub: "İlim" },
       ilmhub: {
         title: "Al-Noor İlim Merkezi",
+        comingSoon: "Yakında (Geliştirme aşamasında)",
         tabs: { feed: "Akış", library: "Kütüphane", media: "Medya", ai: "Yapay Zeka" },
         feed: { daily: "Günün Hikmeti", reminder: "Hatırlatma", featured: "Seçme Metin" },
         library: { search: "Kütüphanede ara...", categories: "Kategoriler", read: "Oku", download: "Çevrimdışı" },

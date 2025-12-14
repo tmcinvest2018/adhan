@@ -9,7 +9,7 @@ import { PrayerCard } from './components/PrayerCard';
 import { SettingsModal } from './components/SettingsModal';
 import { QuranModule } from './components/QuranModule';
 import { IlmHubModule } from './components/IlmHubModule'; 
-import { QiblaCompass } from './components/QiblaCompass'; // Import new component
+import { QiblaCompass } from './components/QiblaCompass'; 
 import { PrayerDetailModal } from './components/PrayerDetailModal';
 import { Compass, Clock, Settings as SettingsIcon, MapPin, Loader2, AlertTriangle, Hourglass, GraduationCap, ArrowLeft } from 'lucide-react';
 import { translations } from './services/translations';
@@ -32,8 +32,6 @@ const ISLAMIC_MONTHS_EN = [
 ];
 
 export default function App() {
-  // State
-  // Note: 'quran' is still a valid view state (triggered by IlmHub), but not a tab button.
   const [activeTab, setActiveTab] = useState<'prayers' | 'qibla' | 'ilmhub' | 'quran'>('prayers');
   const [settings, setSettings] = useState<AppSettings>(() => {
       const saved = localStorage.getItem('nur-settings');
@@ -140,8 +138,9 @@ export default function App() {
   };
 
   const renderPrayers = () => (
-    <div className="animate-in fade-in duration-500 pb-20">
-        <div className="bg-gradient-to-br from-emerald-600 to-teal-800 rounded-2xl p-4 text-white shadow-lg shadow-emerald-200/50 mb-3 relative overflow-hidden">
+    <div className="h-full flex flex-col animate-in fade-in duration-500 w-full">
+        {/* Top Hero Card - Fixed height, compact */}
+        <div className="flex-none bg-gradient-to-br from-emerald-600 to-teal-800 rounded-2xl p-4 text-white shadow-lg shadow-emerald-200/50 mb-3 relative overflow-hidden w-full">
             <div className={`absolute top-0 w-32 h-32 bg-white opacity-5 rounded-full -mt-10 ${isRtl ? 'left-0 -ml-10' : 'right-0 -mr-10'}`} />
             <div className={`absolute bottom-0 w-24 h-24 bg-white opacity-5 rounded-full -mb-10 ${isRtl ? 'right-0 -mr-10' : 'left-0 -ml-10'}`} />
             
@@ -186,7 +185,8 @@ export default function App() {
             </div>
         </div>
 
-        <div className="space-y-1">
+        {/* Prayer List - Flexible to fill available height */}
+        <div className="flex-1 flex flex-col justify-between min-h-0 pb-1 gap-1 w-full">
             {formattedPrayers.map((p) => (
                 <PrayerCard 
                     key={p.originalKey} 
@@ -194,6 +194,7 @@ export default function App() {
                     t={t} 
                     locale={dateLocale}
                     onInfoClick={setSelectedPrayerInfo}
+                    className="flex-1 w-full" 
                 />
             ))}
         </div>
@@ -204,61 +205,57 @@ export default function App() {
     if (activeTab === 'prayers') return renderPrayers();
     if (activeTab === 'qibla') return <QiblaCompass coords={coords} t={t} />;
     if (activeTab === 'quran') return (
-        <div className="h-full flex flex-col">
+        <div className="h-full flex flex-col w-full">
             <button onClick={() => setActiveTab('ilmhub')} className="flex items-center gap-2 p-2 text-gray-500 hover:text-emerald-600 font-medium">
                 <ArrowLeft size={20} /> Back to IlmHub
             </button>
-            <QuranModule t={t} language={settings.language} initialContext={quranContext} />
+            <div className="flex-1 overflow-hidden w-full">
+                <QuranModule t={t} language={settings.language} initialContext={quranContext} />
+            </div>
         </div>
     );
     if (activeTab === 'ilmhub') return (
-        <IlmHubModule 
-            t={t} 
-            language={settings.language} 
-            onNavigateToQuran={(ctx) => {
-                setQuranContext(ctx);
-                setActiveTab('quran');
-            }}
-            onNavigateToTab={() => {}}
-        />
+        <div className="h-full overflow-y-auto no-scrollbar w-full">
+            <IlmHubModule 
+                t={t} 
+                language={settings.language} 
+                onNavigateToQuran={(ctx) => {
+                    setQuranContext(ctx);
+                    setActiveTab('quran');
+                }}
+                onNavigateToTab={() => {}}
+            />
+        </div>
     );
     return null;
   }
 
   return (
-    <div className={`min-h-screen pb-safe-area-bottom ${isRtl ? 'rtl' : 'ltr'}`} dir={isRtl ? 'rtl' : 'ltr'}>
-      {/* HEADER: Updated with Logo Left, Dates Center, Settings Right */}
-      <div className="px-5 py-3 flex items-center justify-center sticky top-0 z-40 bg-[#f0fdf4]/95 backdrop-blur-md border-b border-emerald-100/50 shadow-sm relative">
-        
-        {/* Left: App Logo */}
-        <div className="absolute left-5">
-            <span className="font-serif text-xl font-bold text-emerald-800 tracking-tight">IbaDawah</span>
-        </div>
-
-        {/* Center: Dates */}
-        <div className="flex flex-col items-center">
-            <span className="text-xs sm:text-sm font-bold text-gray-800 leading-tight">
-                {new Date().toLocaleDateString(settings.language, { weekday: 'short', day: 'numeric', month: 'long' })}
-            </span>
-            <span className="text-[10px] sm:text-xs text-emerald-600 font-medium leading-tight opacity-90">
-                {getHijriDate()}
-            </span>
-        </div>
-
-        {/* Right: Settings Button */}
-        <div className="absolute right-5">
+    <div className={`h-screen flex flex-col bg-[#f0fdf4] ${isRtl ? 'rtl' : 'ltr'} overflow-hidden`} dir={isRtl ? 'rtl' : 'ltr'}>
+      {/* Header - Center aligned with max-w-lg */}
+      <div className="flex-none bg-[#f0fdf4] z-10 w-full shadow-sm border-b border-emerald-50/50">
+          <div className="px-4 py-3 flex justify-between items-center max-w-lg mx-auto w-full">
+            <div className="flex flex-col">
+                <span className="text-sm font-bold text-gray-800 leading-tight">
+                    {new Date().toLocaleDateString(settings.language, { weekday: 'short', day: 'numeric', month: 'long' })}
+                </span>
+                <span className="text-xs text-emerald-600 font-medium leading-tight opacity-90">
+                    {getHijriDate()}
+                </span>
+            </div>
             <button 
                 onClick={() => setIsSettingsOpen(true)}
-                className="p-1.5 bg-white/80 rounded-full shadow-sm text-gray-500 hover:text-emerald-600 transition-colors"
+                className="p-2 bg-white rounded-full shadow-sm text-gray-500 hover:text-emerald-600 transition-colors border border-gray-100"
             >
-                <SettingsIcon size={18} />
+                <SettingsIcon size={20} />
             </button>
-        </div>
+          </div>
       </div>
 
-      <main className="px-5 py-3 max-w-lg mx-auto">
+      {/* Main Content Area - Center aligned with max-w-lg */}
+      <main className="flex-1 w-full max-w-lg mx-auto relative flex flex-col min-h-0 px-4 pt-3">
          {loadingLoc && !coords && activeTab === 'prayers' ? (
-             <div className="flex flex-col items-center justify-center h-64 text-emerald-600">
+             <div className="flex flex-col items-center justify-center h-full text-emerald-600">
                  <Loader2 size={32} className="animate-spin mb-4" />
                  <p className="font-medium">Locatie bepalen...</p>
              </div>
@@ -267,8 +264,8 @@ export default function App() {
          )}
       </main>
 
-      {/* Streamlined Bottom Navigation */}
-      <div className="fixed bottom-6 left-6 right-6 z-40 max-w-lg mx-auto">
+      {/* Bottom Navigation - Center aligned with max-w-lg */}
+      <div className="flex-none p-4 pb-safe-area-bottom w-full max-w-lg mx-auto bg-[#f0fdf4] z-20">
         <div className="bg-white/90 backdrop-blur-md border border-gray-200/50 rounded-2xl shadow-xl shadow-gray-200/50 p-1.5 flex justify-between">
             <button 
                 onClick={() => setActiveTab('prayers')}
@@ -278,22 +275,14 @@ export default function App() {
                 <span className="font-medium text-sm hidden sm:inline">{t.tabs.prayers}</span>
             </button>
             
-            {/* IlmHub - TEMPORARILY DISABLED */}
-            <div className="flex-[1.5] relative group flex justify-center">
-                <button 
-                    disabled
-                    className="w-full flex items-center justify-center gap-2 py-3 rounded-xl transition-all duration-300 bg-gray-50 text-gray-400 cursor-not-allowed opacity-70"
-                >
-                    <GraduationCap size={20} />
-                    <span className="font-medium text-sm hidden sm:inline">{t.ilmhub.title || "IlmHub"}</span>
-                </button>
-                {/* Info Balloon / Tooltip */}
-                <div className="absolute bottom-full mb-3 left-1/2 -translate-x-1/2 bg-gray-800 text-white text-xs font-medium px-3 py-1.5 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap shadow-lg z-50">
-                    🚧 Under Construction
-                    {/* Small arrow pointing down */}
-                    <div className="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-gray-800"></div>
-                </div>
-            </div>
+            <button 
+                onClick={() => alert(t.ilmhub.comingSoon)}
+                title={t.ilmhub.comingSoon}
+                className="flex-[1.5] flex items-center justify-center gap-2 py-3 rounded-xl transition-all duration-300 text-gray-400 bg-gray-50/50 cursor-not-allowed opacity-70"
+            >
+                <GraduationCap size={20} />
+                <span className="font-medium text-sm hidden sm:inline">{t.ilmhub.title || "IlmHub"}</span>
+            </button>
             
             <button 
                 onClick={() => setActiveTab('qibla')}

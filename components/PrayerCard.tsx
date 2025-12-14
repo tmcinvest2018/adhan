@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { PrayerTimeDisplay, PrayerKey } from '../types';
 import { format } from 'date-fns';
@@ -8,6 +9,7 @@ interface Props {
   t: any;
   locale: any;
   onInfoClick?: (key: PrayerKey) => void;
+  className?: string;
 }
 
 const getIcon = (key: string) => {
@@ -22,32 +24,31 @@ const getIcon = (key: string) => {
     }
 }
 
-export const PrayerCard: React.FC<Props> = ({ prayer, t, locale, onInfoClick }) => {
-  // Reduced padding (p-3), margin (mb-2) for compactness
-  const baseClasses = "flex items-center justify-between p-3 mb-2 rounded-2xl transition-all duration-300";
-  const activeClasses = "bg-emerald-600 text-white shadow-lg shadow-emerald-200 transform scale-[1.01]"; // Reduced scale slightly
-  const nextClasses = "bg-emerald-100 border-2 border-emerald-500 text-emerald-900";
-  const normalClasses = "bg-white text-gray-700 shadow-sm border border-gray-100 hover:bg-gray-50";
+export const PrayerCard: React.FC<Props> = ({ prayer, t, locale, onInfoClick, className = '' }) => {
+  // Removed mb-2 to allow parent flex container to control spacing
+  const baseClasses = `flex items-center justify-between p-3 rounded-2xl transition-all duration-300 w-full ${className}`;
+  const activeClasses = "bg-emerald-600 text-white shadow-lg shadow-emerald-200/50 transform scale-[1.02] z-10"; 
+  const nextClasses = "bg-emerald-50 border border-emerald-500/30 text-emerald-900";
+  const normalClasses = "bg-white text-gray-700 shadow-sm border border-gray-100/50 hover:bg-gray-50";
 
-  let className = baseClasses;
+  let finalClass = baseClasses;
   if (prayer.isCurrent) {
-    className += ` ${activeClasses}`;
+    finalClass += ` ${activeClasses}`;
   } else if (prayer.isNext) {
-    className += ` ${nextClasses}`;
+    finalClass += ` ${nextClasses}`;
   } else {
-    className += ` ${normalClasses}`;
+    finalClass += ` ${normalClasses}`;
   }
 
   return (
-    <div className={className}>
+    <div className={finalClass}>
       <div className="flex items-center gap-3">
-        <div className={`p-2 rounded-full ${prayer.isCurrent ? 'bg-white/20' : 'bg-emerald-50 text-emerald-600'}`}>
+        <div className={`p-2 rounded-full ${prayer.isCurrent ? 'bg-white/20' : 'bg-emerald-50/50 text-emerald-600'}`}>
             {getIcon(prayer.originalKey)}
         </div>
         <div>
           <div className="flex items-center gap-2">
-            {/* Reduced font size to text-base */}
-            <h3 className="font-semibold text-base">{prayer.name}</h3>
+            <h3 className="font-semibold text-base leading-tight">{prayer.name}</h3>
             {onInfoClick && (
                 <button 
                     onClick={(e) => { e.stopPropagation(); onInfoClick(prayer.originalKey); }}
@@ -57,14 +58,13 @@ export const PrayerCard: React.FC<Props> = ({ prayer, t, locale, onInfoClick }) 
                 </button>
             )}
           </div>
-          {prayer.isNext && <span className="text-[10px] font-medium uppercase tracking-wider opacity-80">{t.status.next}</span>}
-          {prayer.isCurrent && <span className="text-[10px] font-medium uppercase tracking-wider opacity-80">{t.status.current}</span>}
+          {prayer.isNext && <span className="text-[10px] font-bold uppercase tracking-wider opacity-70">{t.status.next}</span>}
+          {prayer.isCurrent && <span className="text-[10px] font-bold uppercase tracking-wider opacity-70">{t.status.current}</span>}
         </div>
       </div>
       
       <div className="flex items-center gap-3">
-        {/* Reduced time font size to text-xl */}
-        <span className="text-xl font-bold tracking-tight">
+        <span className="text-xl font-bold tracking-tight font-mono">
             {format(prayer.time, 'HH:mm', { locale })}
         </span>
         <button className={`opacity-80 hover:opacity-100 ${prayer.isCurrent ? 'text-white' : 'text-gray-400'}`}>

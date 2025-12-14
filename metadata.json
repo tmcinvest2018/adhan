@@ -1,5 +1,5 @@
 {
-  "name": "IbaDawah",
+  "name": "NurPrayer",
   "description": "Een moderne, privacy-vriendelijke islamitische gebedstijden en Qibla applicatie.",
   "requestFramePermissions": [
     "geolocation"
