@@ -645,7 +645,8 @@ export const IlmHubModule: React.FC<Props> = ({ t, language, onNavigateToQuran, 
                         type: item.mediaType as 'video' | 'audio',
                         category: item.tags[0] as any || 'lecture',
                         url: item.mediaUrl || '',
-                        thumbnail: item.thumbnailUrl
+                        thumbnail: item.thumbnailUrl,
+                        duration: '' // FIX: Added duration property to satisfy MediaItem interface
                     }} 
                   />
               ) : (
