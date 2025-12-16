@@ -12,159 +12,106 @@ const getChannelLogo = (authorName: string): string => {
     return `https://ui-avatars.com/api/?name=${encoded}&background=random&color=fff&size=64&font-size=0.5&bold=true`;
 };
 
-// --- CHANNEL DATABASE (Real YouTube Channel IDs) ---
-// RSS Feeds require the 'UC...' ID. 
+// --- CHANNEL DATABASE ---
+// We keep this here to map Categories to Authors, even though the API now fetches data.
 interface ChannelDef {
     id: string; 
     name: string;
     cat: 'quran' | 'lecture' | 'history' | 'fiqh';
-    ytId: string; // The Actual YouTube Channel ID (UC...)
+    ytId: string;
 }
 
 const CHANNELS: ChannelDef[] = [
-    // Geleerden
-    { id: 'fawzan', name: 'Sh. Saleh Al-Fawzan', cat: 'fiqh', ytId: 'UCwO0vB8Nf04_W2rF6S_84xg' }, // Unofficial/Archive (Official often disables embed)
     { id: 'menk', name: 'Mufti Menk', cat: 'lecture', ytId: 'UCTSLKqAm-S_jZk42Wd-z_DQ' },
-    { id: 'yasir_qadhi', name: 'Dr. Yasir Qadhi', cat: 'history', ytId: 'UC37o9G5k650f9f3XjN_V24A' }, // EPIC Masjid
-    { id: 'bayyinah', name: 'Bayyinah TV', cat: 'quran', ytId: 'UCeM7c1D2C6pC5zQ7k1z1u_g' }, // Nouman Ali Khan
+    { id: 'yasir_qadhi', name: 'Dr. Yasir Qadhi', cat: 'history', ytId: 'UC37o9G5k650f9f3XjN_V24A' }, 
+    { id: 'bayyinah', name: 'Bayyinah TV', cat: 'quran', ytId: 'UCeM7c1D2C6pC5zQ7k1z1u_g' }, 
     { id: 'yaqeen', name: 'Yaqeen Institute', cat: 'lecture', ytId: 'UC3vPWjJ7wA4p_1c7K_3qE1g' },
-    { id: 'onepath', name: 'OnePath Network', cat: 'lecture', ytId: 'UCQ_p1_8_6_5_4_3_2_1' }, // Placeholder ID, will fallback
     { id: 'muslim_lantern', name: 'Muslim Lantern', cat: 'lecture', ytId: 'UC38_4_5_6_7_8_9' }, 
-    { id: 'assim', name: 'Sh. Assim Al-Hakeem', cat: 'fiqh', ytId: 'UCW2L5_H1_4_3_2_1' },
     { id: 'mercifulservant', name: 'Merciful Servant', cat: 'lecture', ytId: 'UCHGA_5_4_3_2_1' },
+    { id: 'assim', name: 'Sh. Assim Al-Hakeem', cat: 'fiqh', ytId: 'UCW2L5_H1_4_3_2_1' },
 ];
 
-// --- FALLBACK CACHE (Used if ALL proxies fail) ---
+// --- FALLBACK CACHE (Offline / Backup) ---
 const VIDEO_CACHE: MediaItem[] = [
-    { id: 'fawzan_1', title: 'Explanation of Kitab at-Tawheed', author: 'Sh. Saleh Al-Fawzan', type: 'video', category: 'fiqh', url: 'https://www.youtube.com/watch?v=HuAgBv-2l38', duration: '45:00', thumbnail: '' },
-    { id: 'yq_seerah_1', title: 'Seerah of Prophet Muhammad Ep 1', author: 'Dr. Yasir Qadhi', type: 'video', category: 'history', url: 'https://www.youtube.com/watch?v=VOUp3ZZ9t3k', duration: '1:05:00', thumbnail: '' },
-    { id: 'menk_1', title: 'Stop Overthinking & Trust Allah', author: 'Mufti Menk', type: 'video', category: 'lecture', url: 'https://www.youtube.com/watch?v=1s9q3', duration: '20:00', thumbnail: '' },
-];
-
-// --- RSS PROXY STRATEGY ---
-// We rotate through these proxies to bypass CORS.
-const PROXIES = [
-    (url: string) => `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`,
-    (url: string) => `https://corsproxy.io/?${encodeURIComponent(url)}`, 
-    (url: string) => `https://thingproxy.freeboard.io/fetch/${url}` // Slower, tertiary backup
+    { id: 'fawzan_1', title: 'Explanation of Kitab at-Tawheed', author: 'Sh. Saleh Al-Fawzan', type: 'video', category: 'fiqh', url: 'https://www.youtube.com/embed/HuAgBv-2l38', duration: '45:00', thumbnail: '' },
+    { id: 'yq_seerah_1', title: 'Seerah of Prophet Muhammad Ep 1', author: 'Dr. Yasir Qadhi', type: 'video', category: 'history', url: 'https://www.youtube.com/embed/VOUp3ZZ9t3k', duration: '1:05:00', thumbnail: '' },
+    { id: 'menk_1', title: 'Stop Overthinking & Trust Allah', author: 'Mufti Menk', type: 'video', category: 'lecture', url: 'https://www.youtube.com/embed/1s9q3', duration: '20:00', thumbnail: '' },
 ];
 
 export const MultimediaService = {
     
     /**
-     * Fetch Live RSS Feed with Multi-Proxy Fallback
+     * Fetch Media via Vercel Serverless Proxy
      */
-    fetchRSS: async (channelId: string): Promise<MediaItem[]> => {
-        const rssUrl = `https://www.youtube.com/feeds/videos.xml?channel_id=${channelId}`;
-        
-        for (const proxyGen of PROXIES) {
-            try {
-                const proxyUrl = proxyGen(rssUrl);
-                const response = await fetch(proxyUrl, { signal: AbortSignal.timeout(3000) }); // 3s timeout per proxy
-                
-                if (!response.ok) continue;
-                
-                const text = await response.text();
-                // Basic XML Validation
-                if (!text.includes('<feed') && !text.includes('<entry>')) continue;
-
-                // Parse XML
-                const parser = new DOMParser();
-                const xmlDoc = parser.parseFromString(text, "text/xml");
-                const entries = Array.from(xmlDoc.querySelectorAll("entry"));
-
-                if (entries.length === 0) continue;
-
-                return entries.map(entry => {
-                    const videoId = entry.querySelector("videoId")?.textContent || "";
-                    const title = entry.querySelector("title")?.textContent || "";
-                    const author = entry.querySelector("author name")?.textContent || "";
-                    
-                    return enrichMediaItem({
-                        id: videoId,
-                        title: title,
-                        author: author,
-                        type: 'video',
-                        category: 'lecture', // Default, we can map this later
-                        url: `https://www.youtube.com/watch?v=${videoId}`,
-                        duration: 'New', // RSS doesn't give duration
-                        thumbnail: '' // Will be generated by enrich
-                    });
-                });
-
-            } catch (e) {
-                // Try next proxy
-                console.warn(`Proxy failed for ${channelId}`, e);
-            }
-        }
-        
-        return []; // All proxies failed
-    },
-
-    /**
-     * Get Feed Media (Hybrid: Live + Cache Fallback)
-     */
-    getFeedMedia: async (limit: number = 5): Promise<MediaItem[]> => {
-        // 1. Pick 2 Random Channels to fetch LIVE
-        const randomChannels = [...CHANNELS].sort(() => 0.5 - Math.random()).slice(0, 2);
-        let liveItems: MediaItem[] = [];
-
+    getFeedMedia: async (limit: number = 10): Promise<MediaItem[]> => {
         try {
-            const promises = randomChannels.map(c => MultimediaService.fetchRSS(c.ytId));
-            const results = await Promise.all(promises);
-            liveItems = results.flat();
-        } catch (e) {
-            console.warn("Live fetch failed completely");
-        }
-
-        // 2. Mix with Cache (if live failed or returned few items)
-        if (liveItems.length < limit) {
-             const cacheItems = VIDEO_CACHE.map(enrichMediaItem);
-             liveItems = [...liveItems, ...cacheItems];
-        }
-
-        // 3. Deduplicate and Slice
-        const uniqueItems = Array.from(new Map(liveItems.map(item => [item.id, item])).values());
-        
-        // Inject correct categories based on channel map
-        const finalItems = uniqueItems.slice(0, limit).map(item => {
-            const knownChannel = CHANNELS.find(c => item.author.includes(c.name) || c.name.includes(item.author));
-            if (knownChannel) {
-                return { ...item, category: knownChannel.cat };
+            // Determine API URL (Relative path works in production, but needs full URL for some envs)
+            // We use relative '/api/youtube-feed' which Vercel resolves automatically.
+            const response = await fetch('/api/youtube-feed');
+            
+            if (!response.ok) {
+                throw new Error('API response not ok');
             }
-            return item;
-        });
 
-        return finalItems;
+            const rawItems = await response.json();
+            
+            if (!Array.isArray(rawItems) || rawItems.length === 0) {
+                return VIDEO_CACHE.map(enrichMediaItem);
+            }
+
+            // Map and Enrich
+            const items = rawItems.map((item: any) => {
+                // Try to find category based on author name
+                const knownChannel = CHANNELS.find(c => 
+                    item.author.toLowerCase().includes(c.name.toLowerCase()) || 
+                    c.name.toLowerCase().includes(item.author.toLowerCase())
+                );
+                
+                return enrichMediaItem({
+                    ...item,
+                    category: knownChannel ? knownChannel.cat : 'lecture',
+                    type: 'video',
+                    duration: 'New' // API doesn't return duration yet, keep it simple
+                });
+            });
+
+            return items.slice(0, limit);
+
+        } catch (e) {
+            console.warn("Vercel Proxy fetch failed, using fallback cache:", e);
+            // Fallback to cache if the API fails (e.g. during local dev without 'vercel dev' running)
+            return VIDEO_CACHE.map(enrichMediaItem);
+        }
     },
 
     /**
-     * Search Media (Searches Local Cache + Live Channel check)
+     * Search Media (Local Filter of the Aggregated Feed)
+     * To save API calls, we currently filter the cache or re-fetch with query.
      */
     searchMedia: async (query: string): Promise<MediaItem[]> => {
-        const qLower = query.toLowerCase();
-        
-        // 1. Check if query matches a channel name
-        const targetChannel = CHANNELS.find(c => c.name.toLowerCase().includes(qLower));
-        
-        if (targetChannel) {
-            // Live fetch specific channel
-            const items = await MultimediaService.fetchRSS(targetChannel.ytId);
-            if (items.length > 0) return items;
+        try {
+            // We can call the API with ?query= param if we want server-side filtering
+            const response = await fetch(`/api/youtube-feed?query=${encodeURIComponent(query)}`);
+            if (response.ok) {
+                const rawItems = await response.json();
+                return rawItems.map((item: any) => enrichMediaItem({ ...item, category: 'lecture' }));
+            }
+        } catch (e) {
+            // Ignore and fallthrough to cache
         }
 
-        // 2. Fallback to searching the cache
+        // Fallback: Search local cache
+        const qLower = query.toLowerCase();
         const cacheResults = VIDEO_CACHE.filter(item => 
             item.title.toLowerCase().includes(qLower) || 
             item.author.toLowerCase().includes(qLower)
         );
-
         return cacheResults.map(enrichMediaItem);
     },
 
     getByCategory: async (category: string): Promise<MediaItem[]> => {
-        // For category view, we rely on cache for speed in this demo, 
-        // as fetching ALL channels for a category is too slow without a backend.
+        // Since we don't have a database, we return the cached items for the category
+        // In a real implementation, we would pass ?category= to the API
         const results = VIDEO_CACHE.filter(item => item.category === category);
         return results.map(enrichMediaItem);
     }
@@ -177,17 +124,23 @@ function enrichMediaItem(item: MediaItem): MediaItem {
     // 1. Extract ID
     let videoId = item.id;
     // If ID looks like a URL, extract the ID
-    if (videoId.includes('http') || videoId.length > 20) {
+    if (videoId.includes('http') || videoId.length > 15) {
         if (item.url.includes('v=')) {
             videoId = item.url.split('v=')[1]?.split('&')[0];
         } else if (item.url.includes('embed/')) {
             videoId = item.url.split('embed/')[1]?.split('?')[0];
+        } else if (item.url.includes('youtu.be/')) {
+            videoId = item.url.split('youtu.be/')[1]?.split('?')[0];
         }
     }
+
+    // Clean title (remove common YouTube clutter)
+    const cleanTitle = item.title.replace(/&quot;/g, '"').replace(/&#39;/g, "'").replace(/&amp;/g, "&");
 
     return {
         ...item,
         id: videoId,
+        title: cleanTitle,
         // Ensure thumbnail is high quality
         thumbnail: getThumbnailUrl(videoId),
         // @ts-ignore - injecting logo property dynamically
