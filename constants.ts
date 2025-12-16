@@ -1,3 +1,4 @@
+
 import { CalculationMethod, Madhab, AppSettings } from './types';
 
 // Mecca Coordinates
@@ -25,6 +26,7 @@ export const DEFAULT_SETTINGS: AppSettings = {
   madhab: Madhab.SHAFI,
   useGPS: true,
   language: 'nl',
+  reciterId: 'ar.alafasy', // Default Reciter
   notifications: {
     fajr: { ...DEFAULT_NOTIF_CONFIG },
     sunrise: { ...DEFAULT_NOTIF_CONFIG, soundEnabled: false }, // Usually no adhan for sunrise

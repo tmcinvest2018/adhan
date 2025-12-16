@@ -6,6 +6,9 @@
     <meta name="theme-color" content="#f0fdf4" />
     <title>NurPrayer</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&display=swap" rel="stylesheet">
     <style>
       /* Smooth scrolling and basic reset adjustments */
       html {
@@ -22,7 +25,8 @@
       #root {
         height: 100%;
         display: flex;
-        flex-col: column;
+        flex-direction: column; /* Fixed: was flex-col which is invalid CSS */
+        width: 100%;
       }
       /* Hide scrollbar for clean UI */
       .no-scrollbar::-webkit-scrollbar {
@@ -35,6 +39,10 @@
       /* Safe area spacing for notched phones */
       .pb-safe-area-bottom {
         padding-bottom: env(safe-area-inset-bottom);
+      }
+      /* Custom Font Classes */
+      .font-arabic {
+        font-family: 'Amiri', serif;
       }
     </style>
   <script type="importmap">

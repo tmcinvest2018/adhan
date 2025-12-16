@@ -1,6 +1,8 @@
+
 import React, { useState } from 'react';
 import { AppSettings, CalculationMethod, Madhab, PrayerKey } from '../types';
 import { METHOD_LABELS, LANGUAGES, ADHAN_SOUNDS } from '../constants';
+import { RECITERS } from '../services/quranService';
 import { X, Save, Bell, BellOff, Volume2, VolumeX, PlayCircle } from 'lucide-react';
 import { translations } from '../services/translations';
 
@@ -113,6 +115,22 @@ export const SettingsModal: React.FC<Props> = ({ isOpen, onClose, settings, onSa
                         >
                             {Object.entries(LANGUAGES).map(([key, label]) => (
                                 <option key={key} value={key}>{label}</option>
+                            ))}
+                        </select>
+                    </div>
+
+                    {/* Reciter Selection */}
+                    <div>
+                        <label className="block text-sm font-semibold text-gray-500 mb-2 uppercase tracking-wide">
+                            {t.quran.reciter}
+                        </label>
+                        <select 
+                            value={localSettings.reciterId}
+                            onChange={(e) => setLocalSettings({...localSettings, reciterId: e.target.value})}
+                            className="w-full p-4 bg-white rounded-xl border border-gray-100 shadow-sm focus:ring-2 focus:ring-emerald-500 text-gray-800"
+                        >
+                            {RECITERS.map((r) => (
+                                <option key={r.id} value={r.id}>{r.name}</option>
                             ))}
                         </select>
                     </div>

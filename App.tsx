@@ -9,9 +9,11 @@ import { PrayerCard } from './components/PrayerCard';
 import { SettingsModal } from './components/SettingsModal';
 import { QuranModule } from './components/QuranModule';
 import { IlmHubModule } from './components/IlmHubModule'; 
+import { TrackerModule } from './components/TrackerModule';
 import { QiblaCompass } from './components/QiblaCompass'; 
 import { PrayerDetailModal } from './components/PrayerDetailModal';
-import { Compass, Clock, Settings as SettingsIcon, MapPin, Loader2, AlertTriangle, Hourglass, GraduationCap, ArrowLeft } from 'lucide-react';
+import { Onboarding } from './components/Onboarding';
+import { Compass, Clock, Settings as SettingsIcon, MapPin, Loader2, AlertTriangle, Hourglass, GraduationCap, ArrowLeft, BarChart3 } from 'lucide-react';
 import { translations } from './services/translations';
 import { nl, enUS, ar, tr, fr, de, id, es, ru } from 'date-fns/locale';
 
@@ -32,15 +34,23 @@ const ISLAMIC_MONTHS_EN = [
 ];
 
 export default function App() {
-  const [activeTab, setActiveTab] = useState<'prayers' | 'qibla' | 'ilmhub' | 'quran'>('prayers');
+  const [activeTab, setActiveTab] = useState<'prayers' | 'qibla' | 'ilmhub' | 'quran' | 'tracker'>('prayers');
+  
+  // Settings & Storage
   const [settings, setSettings] = useState<AppSettings>(() => {
       const saved = localStorage.getItem('nur-settings');
       let parsed = saved ? JSON.parse(saved) : DEFAULT_SETTINGS;
       if (!parsed.notifications) {
           parsed = { ...parsed, notifications: DEFAULT_SETTINGS.notifications };
       }
+      if (!parsed.reciterId) {
+          parsed = { ...parsed, reciterId: DEFAULT_SETTINGS.reciterId };
+      }
       return parsed;
   });
+
+  const [onboarded, setOnboarded] = useState(() => localStorage.getItem('nurprayer_onboarded') === 'true');
+
   const [coords, setCoords] = useState<UserCoordinates | null>(null);
   const [loadingLoc, setLoadingLoc] = useState(false);
   const [errorLoc, setErrorLoc] = useState<string | null>(null);
@@ -64,7 +74,8 @@ export default function App() {
   }, [isRtl, settings.language]);
 
   useEffect(() => {
-    if (settings.useGPS) {
+    // Only fetch GPS if onboarded or settings demand it
+    if (onboarded && settings.useGPS) {
         setLoadingLoc(true);
         navigator.geolocation.getCurrentPosition(
             (pos) => {
@@ -82,18 +93,16 @@ export default function App() {
             }
         );
     }
-  }, [settings.useGPS, t.errors.location]);
+  }, [settings.useGPS, onboarded]);
 
   useEffect(() => {
     if (!nextPrayer) {
         setTimeLeft('');
         return;
     }
-
     const interval = setInterval(() => {
         const now = new Date();
         const diff = nextPrayer.time.getTime() - now.getTime();
-        
         if (diff <= 0) {
             setTimeLeft('00:00:00');
         } else {
@@ -103,13 +112,17 @@ export default function App() {
             setTimeLeft(`${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`);
         }
     }, 1000);
-
     return () => clearInterval(interval);
   }, [nextPrayer]);
 
   const handleSaveSettings = (newSettings: AppSettings) => {
       setSettings(newSettings);
       localStorage.setItem('nur-settings', JSON.stringify(newSettings));
+  };
+
+  const completeOnboarding = () => {
+      localStorage.setItem('nurprayer_onboarded', 'true');
+      setOnboarded(true);
   };
 
   const getHijriDate = () => {
@@ -139,7 +152,7 @@ export default function App() {
 
   const renderPrayers = () => (
     <div className="h-full flex flex-col animate-in fade-in duration-500 w-full">
-        {/* Top Hero Card - Fixed height, compact */}
+        {/* Top Hero Card */}
         <div className="flex-none bg-gradient-to-br from-emerald-600 to-teal-800 rounded-2xl p-4 text-white shadow-lg shadow-emerald-200/50 mb-3 relative overflow-hidden w-full">
             <div className={`absolute top-0 w-32 h-32 bg-white opacity-5 rounded-full -mt-10 ${isRtl ? 'left-0 -ml-10' : 'right-0 -mr-10'}`} />
             <div className={`absolute bottom-0 w-24 h-24 bg-white opacity-5 rounded-full -mb-10 ${isRtl ? 'right-0 -mr-10' : 'left-0 -ml-10'}`} />
@@ -155,26 +168,14 @@ export default function App() {
                             </div>
                         )}
                     </div>
-                    
                     <h1 className="text-2xl font-bold leading-none mb-2">{nextPrayer ? nextPrayer.name : t.status.done}</h1>
-                    
                     {nextPrayer && timeLeft && (
                         <div className="flex items-center gap-1.5 text-emerald-50 bg-black/10 w-fit px-2 py-0.5 rounded-lg backdrop-blur-sm">
                             <Hourglass size={10} className="animate-pulse" />
-                            <span className="font-mono font-medium text-xs tracking-wide">
-                                {timeLeft}
-                            </span>
-                        </div>
-                    )}
-                    
-                    {!coords && errorLoc && (
-                        <div className="flex items-center text-red-200 text-[10px] gap-1 mt-1 bg-red-900/20 p-1 rounded w-fit">
-                            <AlertTriangle size={10} />
-                            <span>{errorLoc}</span>
+                            <span className="font-mono font-medium text-xs tracking-wide">{timeLeft}</span>
                         </div>
                     )}
                 </div>
-
                 {nextPrayer && (
                     <div className="bg-white/20 backdrop-blur-md px-3 py-2 rounded-xl border border-white/10 shadow-lg text-center min-w-[80px]">
                          <span className="text-2xl font-bold font-mono tracking-tight leading-none block">
@@ -185,7 +186,7 @@ export default function App() {
             </div>
         </div>
 
-        {/* Prayer List - Flexible to fill available height */}
+        {/* Prayer List */}
         <div className="flex-1 flex flex-col justify-between min-h-0 pb-1 gap-1 w-full">
             {formattedPrayers.map((p) => (
                 <PrayerCard 
@@ -203,6 +204,7 @@ export default function App() {
 
   const renderContent = () => {
     if (activeTab === 'prayers') return renderPrayers();
+    if (activeTab === 'tracker') return <TrackerModule t={t} />;
     if (activeTab === 'qibla') return <QiblaCompass coords={coords} t={t} />;
     if (activeTab === 'quran') return (
         <div className="h-full flex flex-col w-full">
@@ -210,7 +212,12 @@ export default function App() {
                 <ArrowLeft size={20} /> Back to IlmHub
             </button>
             <div className="flex-1 overflow-hidden w-full">
-                <QuranModule t={t} language={settings.language} initialContext={quranContext} />
+                <QuranModule 
+                    t={t} 
+                    language={settings.language} 
+                    reciterId={settings.reciterId}
+                    initialContext={quranContext} 
+                />
             </div>
         </div>
     );
@@ -230,9 +237,22 @@ export default function App() {
     return null;
   }
 
+  // ONBOARDING INTERCEPT
+  if (!onboarded) {
+      return (
+          <Onboarding 
+            t={t} 
+            settings={settings}
+            onComplete={completeOnboarding}
+            onUpdateSettings={(s) => setSettings(prev => ({ ...prev, ...s }))}
+            onUpdateLocation={(c) => setCoords(c)}
+          />
+      );
+  }
+
   return (
-    <div className={`h-screen flex flex-col bg-[#f0fdf4] ${isRtl ? 'rtl' : 'ltr'} overflow-hidden`} dir={isRtl ? 'rtl' : 'ltr'}>
-      {/* Header - Center aligned with max-w-lg */}
+    <div className={`h-screen flex flex-col bg-[#f0fdf4] ${isRtl ? 'rtl' : 'ltr'} overflow-hidden w-full`} dir={isRtl ? 'rtl' : 'ltr'}>
+      {/* Header */}
       <div className="flex-none bg-[#f0fdf4] z-10 w-full shadow-sm border-b border-emerald-50/50">
           <div className="px-4 py-3 flex justify-between items-center max-w-lg mx-auto w-full">
             <div className="flex flex-col">
@@ -252,7 +272,7 @@ export default function App() {
           </div>
       </div>
 
-      {/* Main Content Area - Center aligned with max-w-lg */}
+      {/* Main Content */}
       <main className="flex-1 w-full max-w-lg mx-auto relative flex flex-col min-h-0 px-4 pt-3">
          {loadingLoc && !coords && activeTab === 'prayers' ? (
              <div className="flex flex-col items-center justify-center h-full text-emerald-600">
@@ -264,7 +284,7 @@ export default function App() {
          )}
       </main>
 
-      {/* Bottom Navigation - Center aligned with max-w-lg */}
+      {/* Bottom Navigation */}
       <div className="flex-none p-4 pb-safe-area-bottom w-full max-w-lg mx-auto bg-[#f0fdf4] z-20">
         <div className="bg-white/90 backdrop-blur-md border border-gray-200/50 rounded-2xl shadow-xl shadow-gray-200/50 p-1.5 flex justify-between">
             <button 
@@ -272,16 +292,23 @@ export default function App() {
                 className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl transition-all duration-300 ${activeTab === 'prayers' ? 'bg-emerald-600 text-white shadow-md' : 'text-gray-500 hover:bg-gray-100'}`}
             >
                 <Clock size={20} />
-                <span className="font-medium text-sm hidden sm:inline">{t.tabs.prayers}</span>
+                <span className="font-medium text-xs sm:text-sm hidden sm:inline">{t.tabs.prayers}</span>
+            </button>
+
+            <button 
+                onClick={() => setActiveTab('tracker')}
+                className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl transition-all duration-300 ${activeTab === 'tracker' ? 'bg-emerald-600 text-white shadow-md' : 'text-gray-500 hover:bg-gray-100'}`}
+            >
+                <BarChart3 size={20} />
+                <span className="font-medium text-xs sm:text-sm hidden sm:inline">{t.tabs.tracker}</span>
             </button>
             
             <button 
-                onClick={() => alert(t.ilmhub.comingSoon)}
-                title={t.ilmhub.comingSoon}
-                className="flex-[1.5] flex items-center justify-center gap-2 py-3 rounded-xl transition-all duration-300 text-gray-400 bg-gray-50/50 cursor-not-allowed opacity-70"
+                onClick={() => setActiveTab('ilmhub')}
+                className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl transition-all duration-300 ${activeTab === 'ilmhub' ? 'bg-emerald-600 text-white shadow-md' : 'text-gray-500 hover:bg-gray-100'}`}
             >
                 <GraduationCap size={20} />
-                <span className="font-medium text-sm hidden sm:inline">{t.ilmhub.title || "IlmHub"}</span>
+                <span className="font-medium text-xs sm:text-sm hidden sm:inline">{t.ilmhub.title.split(' ')[0]}</span>
             </button>
             
             <button 
@@ -289,7 +316,7 @@ export default function App() {
                 className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl transition-all duration-300 ${activeTab === 'qibla' ? 'bg-emerald-600 text-white shadow-md' : 'text-gray-500 hover:bg-gray-100'}`}
             >
                 <Compass size={20} />
-                <span className="font-medium text-sm hidden sm:inline">{t.tabs.qibla}</span>
+                <span className="font-medium text-xs sm:text-sm hidden sm:inline">{t.tabs.qibla}</span>
             </button>
         </div>
       </div>

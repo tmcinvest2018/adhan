@@ -33,6 +33,7 @@ export interface AppSettings {
   manualLocation?: UserCoordinates; // If null, use GPS
   useGPS: boolean;
   language: string;
+  reciterId: string; // New Reciter Setting
   notifications: Record<PrayerKey, NotificationConfig>;
 }
 
@@ -170,6 +171,16 @@ export interface LibraryCategory {
     icon: any;
 }
 
+// New Layered Architecture Types
+export interface BookStructureNode {
+    id: string;
+    title: string; // Chapter Title / Surah Name
+    number?: number; // Surah Number / Chapter Number
+    audioUrl?: string; // For Quran Surah playback
+    sections?: BookStructureNode[]; // Sub-chapters (Bab)
+    pageStart?: number;
+}
+
 export interface LibraryBook {
   id: string;
   title: string;
@@ -182,9 +193,13 @@ export interface LibraryBook {
   sourceType: 'api_quran' | 'api_hadith' | 'static_text';
   apiId?: string; // For API calls (e.g., 'bukhari', 'en.ibnkathir')
   
-  // For Static Texts
+  // Offline Architecture 2.0
+  structureCdnUrl?: string; // URL to fetch the Index (Chapters/Surahs)
+  contentCdnUrl?: string; // URL to fetch the full text content
+  
+  // Fallback/Legacy
   content?: string; 
-  chapters?: { id: string, title: string, content: string }[];
+  chapters?: any[];
 }
 
 export interface MediaItem {

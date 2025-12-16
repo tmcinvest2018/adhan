@@ -2,7 +2,7 @@
 import { FeedItem, LibraryBook, MediaItem, SearchResult, SearchCategory } from '../types';
 import { searchAyahs } from './quranService';
 import { AVAILABLE_BOOKS, searchHadithStructure, fetchDailyHadith } from './hadithService';
-import { searchYouTube, getContextualVideos } from './youtubeService';
+import { MultimediaService } from './multimediaService';
 
 // --- STATIC BACKUP LIBRARY (For immediate results) ---
 export const STATIC_LIBRARY_BOOKS: LibraryBook[] = [
@@ -15,30 +15,14 @@ export const STATIC_LIBRARY_BOOKS: LibraryBook[] = [
         sourceType: 'static_text',
         content: `Knowledge is the most noble of things...`
     },
-    // ... (Keep existing static entries as cache/fallback)
 ];
 
-// --- DYNAMIC CONTEXTUAL FEED ---
+// --- STANDARD FEED DATA ---
 
 export const getFeedItems = async (date: Date): Promise<FeedItem[]> => {
-    const day = date.getDay(); // 0 = Sunday, 5 = Friday
-    const hour = date.getHours();
     const items: FeedItem[] = [];
 
-    // 1. Time Context (Static logic)
-    if (hour >= 5 && hour < 12) {
-        items.push({
-            id: 'ctx_morning_adhkar',
-            type: 'reminder',
-            mediaType: 'text',
-            title: 'Morning Remembrance',
-            content: 'Start your day with the morning Adhkar to seek Allah\'s protection and barakah.',
-            tags: ['Sunnah', 'Dhikr'],
-            dateStr: 'Morning'
-        });
-    }
-
-    // 2. Fetch Daily Hadith (Live API)
+    // 1. FETCH DAILY HADITH (Live API)
     try {
         const hadith = await fetchDailyHadith();
         if (hadith) {
@@ -53,7 +37,6 @@ export const getFeedItems = async (date: Date): Promise<FeedItem[]> => {
             });
         }
     } catch (e) {
-        // Fallback
         items.push({
             id: 'daily_wisdom_static',
             type: 'daily_wisdom',
@@ -65,80 +48,43 @@ export const getFeedItems = async (date: Date): Promise<FeedItem[]> => {
         });
     }
 
-    // 3. Contextual Video (Live API Fallback/Sim)
-    let contextTerm = 'islamic lecture';
-    if(day === 5) contextTerm = 'jummah khutbah';
-    
-    const videos = await getContextualVideos(contextTerm);
-    if(videos.length > 0) {
-        items.push({
-            id: `feat_video_${videos[0].id}`,
-            type: 'media_highlight',
-            mediaType: 'video',
-            title: videos[0].title,
-            content: `Watch this relevant video: ${videos[0].title}`,
-            mediaUrl: videos[0].url,
-            source: videos[0].author,
-            tags: ['Video', 'Lecture']
-        });
-    }
+    // 2. FEATURED CONTENT (Mock Data)
+    items.push({
+        id: 'feat_1',
+        type: 'featured_text',
+        mediaType: 'text',
+        title: 'The Virtue of Patience (Sabr)',
+        content: 'Patience is not just about waiting, but how you behave while waiting. In the Quran, Allah says "Indeed, Allah is with the patient." (2:153)',
+        tags: ['Character', 'Quran'],
+        dateStr: 'Featured'
+    });
 
-    // 4. Friday Specific
-    if (day === 5) {
+    // 3. MEDIA HIGHLIGHTS
+    const mediaItems = await MultimediaService.getFeedMedia(3);
+    mediaItems.forEach(m => {
         items.push({
-            id: 'fri_kahf_audio',
+            id: `feat_media_${m.id}`,
             type: 'media_highlight',
-            mediaType: 'audio',
-            title: 'It\'s Jumu\'ah: Listen to Al-Kahf',
-            content: 'Prophet Muhammad (ﷺ) said: "Whoever reads Surah Al-Kahf on the day of Jumu’ah, will have a light that will shine from him from one Friday to the next."',
-            mediaUrl: 'https://download.quranicaudio.com/quran/mishaari_raashid_al_3afaasee/018.mp3',
-            source: 'Sunan al-Bayhaqi',
-            tags: ['Sunnah', 'Friday', 'Quran']
+            mediaType: m.type as 'video'|'audio',
+            title: m.title,
+            content: m.author,
+            mediaUrl: m.url,
+            source: m.author,
+            thumbnailUrl: m.thumbnail,
+            tags: [m.category, m.type]
         });
-    }
+    });
+
+    // 4. GENERAL REMINDERS
+    items.push({
+        id: 'rem_1',
+        type: 'reminder',
+        mediaType: 'text',
+        title: 'Have you read Surah Al-Kahf?',
+        content: 'It is recommended to read Surah Al-Kahf on Fridays.',
+        tags: ['Sunnah', 'Friday'],
+        dateStr: 'Weekly'
+    });
 
     return items;
-};
-
-// --- UNIVERSAL SEARCH SERVICE (FEDERATED) ---
-
-export const searchUniversal = async (query: string, language: string): Promise<SearchResult[]> => {
-    const qLower = query.toLowerCase();
-
-    // Execute searches in parallel
-    const [quranResults, youtubeResults, hadithResults] = await Promise.all([
-        searchAyahs(query, language).catch(() => []),
-        searchYouTube(query).catch(() => []),
-        searchHadithStructure(query).catch(() => [])
-    ]);
-
-    // Local Library Search (Sync)
-    const libResults: SearchResult[] = STATIC_LIBRARY_BOOKS
-        .filter(b => b.title.toLowerCase().includes(qLower) || b.author.toLowerCase().includes(qLower))
-        .map(b => ({
-            id: `lib_${b.id}`,
-            category: 'library' as SearchCategory,
-            title: b.title,
-            subtitle: b.author,
-            contentPreview: b.description,
-            data: b
-        }));
-
-    // Transform YouTube Results to SearchResult format
-    const formattedVideoResults: SearchResult[] = youtubeResults.map(v => ({
-        id: v.id,
-        category: 'media' as SearchCategory,
-        title: v.title,
-        subtitle: v.author,
-        imageUrl: v.thumbnail,
-        data: v
-    }));
-
-    // Combine all
-    return [
-        ...quranResults,
-        ...formattedVideoResults,
-        ...hadithResults,
-        ...libResults
-    ];
 };
