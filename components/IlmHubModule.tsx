@@ -1,11 +1,10 @@
 
 import React, { useState, useEffect, useRef } from 'react';
-import { FeedItem, LibraryBook, ChatMessage, MediaItem, SearchResult, QuranContext, BookStructureNode, HadithData } from '../types';
+import { FeedItem, LibraryBook, ChatMessage, MediaItem, QuranContext, BookStructureNode, HadithData } from '../types';
 import { getFeedItems } from '../services/ilmHubData';
 import { getLibraryCatalog } from '../services/libraryData';
 import { LibraryService } from '../services/libraryService';
 import { fetchHadiths } from '../services/hadithService';
-import { SearchService } from '../services/SearchService'; 
 import { MultimediaService } from '../services/multimediaService';
 import { HisnService, HisnSection, HisnItem } from '../services/hisnService';
 import { MediaCard } from './MediaCard';
@@ -43,6 +42,7 @@ export const IlmHubModule: React.FC<Props> = ({ t, language, onNavigateToQuran, 
   const [selectedChapter, setSelectedChapter] = useState<HisnSection | null>(null);
   const [hisnItems, setHisnItems] = useState<HisnItem[]>([]);
   const [loadingHisn, setLoadingHisn] = useState(false);
+  const [hisnSearchQuery, setHisnSearchQuery] = useState('');
 
   // Download State
   const [downloadProgress, setDownloadProgress] = useState<number>(0);
@@ -55,6 +55,8 @@ export const IlmHubModule: React.FC<Props> = ({ t, language, onNavigateToQuran, 
 
   // Media State
   const [mediaItems, setMediaItems] = useState<MediaItem[]>([]);
+  const [mediaSearchQuery, setMediaSearchQuery] = useState('');
+  const [isSearchingMedia, setIsSearchingMedia] = useState(false);
 
   // AI State
   const [chatInput, setChatInput] = useState('');
@@ -63,11 +65,6 @@ export const IlmHubModule: React.FC<Props> = ({ t, language, onNavigateToQuran, 
   ]);
   const [isTyping, setIsTyping] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
-
-  // SEARCH STATE
-  const [searchQuery, setSearchQuery] = useState('');
-  const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
-  const [isSearching, setIsSearching] = useState(false);
 
   // --- INITIALIZATION ---
   useEffect(() => {
@@ -213,41 +210,6 @@ export const IlmHubModule: React.FC<Props> = ({ t, language, onNavigateToQuran, 
       }
   };
 
-  const handleSearchResultClick = (result: SearchResult) => {
-      if (result.category === 'quran') {
-          if (result.data?.surah) {
-              onNavigateToQuran({ surah: result.data.surah, ayah: result.data.ayah });
-          }
-      } else if (result.category === 'hadith') {
-          if (result.data?.bookId) {
-             const book = catalog.find(b => b.apiId === result.data.bookId);
-             if (book) {
-                 setActiveTab('library');
-                 setSelectedCategory('hadith_collections');
-                 openBook(book); 
-             }
-          }
-      } else if (result.category === 'library') {
-          if (result.data?.bookId) {
-              const book = catalog.find(b => b.id === result.data.bookId);
-              if (book) {
-                  setActiveTab('library');
-                  setSelectedCategory(book.category);
-                  openBook(book).then(() => {
-                       if (result.data?.chapterId) {
-                           handleChapterClick({ id: result.data.chapterId, title: "Search Result" }); 
-                       }
-                  });
-              }
-          }
-      } else if (result.category === 'media') {
-         setActiveTab('media');
-      }
-      
-      setSearchQuery('');
-      setSearchResults([]);
-  };
-
   // --- HISN LOGIC ---
 
   const openHisnChapter = async (chapter: HisnSection) => {
@@ -266,23 +228,6 @@ export const IlmHubModule: React.FC<Props> = ({ t, language, onNavigateToQuran, 
       setHisnItems([]);
       setSelectedChapter(null);
   };
-
-  // --- SEARCH ---
-  useEffect(() => {
-      const delayDebounceFn = setTimeout(async () => {
-          if (searchQuery.length > 2) {
-              setIsSearching(true);
-              const results = await SearchService.search(searchQuery, language);
-              setSearchResults(results);
-              setIsSearching(false);
-          } else {
-              setSearchResults([]);
-          }
-      }, 500);
-      return () => clearTimeout(delayDebounceFn);
-  }, [searchQuery, language]);
-
-  const clearSearch = () => { setSearchQuery(''); setSearchResults([]); };
   
   // --- UI HELPERS ---
   const getGradeColor = (grade: string) => {
@@ -305,13 +250,13 @@ export const IlmHubModule: React.FC<Props> = ({ t, language, onNavigateToQuran, 
   const renderHisn = () => {
       if (hisnView === 'chapters') {
           const filteredChapters = hisnChapters.filter(c => 
-              c.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
-              c.id.includes(searchQuery)
+              c.title.toLowerCase().includes(hisnSearchQuery.toLowerCase()) || 
+              c.id.includes(hisnSearchQuery)
           );
 
           return (
-              <div className="animate-in fade-in pb-24">
-                  <div className="sticky top-0 bg-[#f0fdf4] z-10 py-4 px-1">
+              <div className="animate-in fade-in pb-24 flex flex-col h-full">
+                  <div className="sticky top-0 bg-[#f0fdf4] z-10 py-4 px-1 space-y-3">
                       <div className="bg-amber-600 text-white p-6 rounded-3xl shadow-lg flex items-center justify-between">
                           <div>
                               <h2 className="text-2xl font-bold">Hisnul Muslim</h2>
@@ -320,6 +265,18 @@ export const IlmHubModule: React.FC<Props> = ({ t, language, onNavigateToQuran, 
                           <div className="bg-white/20 p-3 rounded-full">
                               <Shield size={24} />
                           </div>
+                      </div>
+                      
+                      {/* Local Search for Hisn */}
+                      <div className="relative">
+                          <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+                          <input 
+                              type="text" 
+                              placeholder="Search chapters..."
+                              value={hisnSearchQuery}
+                              onChange={(e) => setHisnSearchQuery(e.target.value)}
+                              className="w-full bg-white pl-10 pr-4 py-2.5 rounded-xl border-none shadow-sm focus:ring-2 focus:ring-amber-500"
+                          />
                       </div>
                   </div>
                   
@@ -646,7 +603,7 @@ export const IlmHubModule: React.FC<Props> = ({ t, language, onNavigateToQuran, 
                         category: item.tags[0] as any || 'lecture',
                         url: item.mediaUrl || '',
                         thumbnail: item.thumbnailUrl,
-                        duration: '' // FIX: Added duration property to satisfy MediaItem interface
+                        duration: '' 
                     }} 
                   />
               ) : (
@@ -665,13 +622,49 @@ export const IlmHubModule: React.FC<Props> = ({ t, language, onNavigateToQuran, 
     );
   };
 
-  const renderMedia = () => (
-      <div className="animate-in fade-in pb-24 grid gap-4">
-          {mediaItems.length === 0 ? <div className="text-center p-10 text-gray-400">Loading media...</div> : mediaItems.map(media => (
-                <MediaCard key={media.id} item={media} />
-            ))}
+  const renderMedia = () => {
+    const handleSearch = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!mediaSearchQuery.trim()) return;
+        setIsSearchingMedia(true);
+        // We reuse setLoadingFeed for general loading feedback on the view or create a local one if needed.
+        // For simplicity, using a visual indicator inside the render.
+        const results = await MultimediaService.searchMedia(mediaSearchQuery);
+        setMediaItems(results);
+        setIsSearchingMedia(false);
+    }
+
+    return (
+      <div className="animate-in fade-in pb-24 flex flex-col h-full">
+         <form onSubmit={handleSearch} className="sticky top-0 bg-[#f0fdf4] z-10 py-4 px-1">
+              <div className="relative">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
+                  <input 
+                      type="text" 
+                      placeholder="Search videos (Piped API)..."
+                      value={mediaSearchQuery}
+                      onChange={(e) => setMediaSearchQuery(e.target.value)}
+                      className="w-full bg-white pl-10 pr-12 py-3 rounded-xl border-none shadow-sm focus:ring-2 focus:ring-emerald-500"
+                  />
+                  <button type="submit" disabled={isSearchingMedia} className="absolute right-3 top-1/2 -translate-y-1/2 bg-emerald-100 p-1.5 rounded-lg text-emerald-700 disabled:opacity-50">
+                    {isSearchingMedia ? <Loader2 size={16} className="animate-spin" /> : <Search size={16} />}
+                  </button>
+              </div>
+         </form>
+
+         {/* Results */}
+         <div className="grid gap-4">
+             {mediaItems.length === 0 ? (
+                 <div className="text-center p-10 text-gray-400">
+                     <p>No videos found.</p>
+                 </div>
+             ) : (
+                mediaItems.map(media => <MediaCard key={media.id} item={media} />)
+             )}
+         </div>
       </div>
-  );
+    );
+  }
 
   const renderAI = () => (
       <div className="flex flex-col h-[calc(100vh-180px)] animate-in fade-in">
@@ -695,98 +688,33 @@ export const IlmHubModule: React.FC<Props> = ({ t, language, onNavigateToQuran, 
       </div>
   );
 
-  const renderSearchResults = () => (
-      <div className="animate-in fade-in pb-24 space-y-4">
-          <div className="flex justify-between items-center px-1">
-              <h3 className="font-bold text-gray-500 text-xs uppercase tracking-wider">Search Results</h3>
-              {isSearching && <Loader2 size={16} className="animate-spin text-emerald-600" />}
-          </div>
-          
-          {searchResults.length === 0 && !isSearching && (
-              <div className="text-center py-10 text-gray-400">
-                  <Search size={48} className="mx-auto mb-4 opacity-20" />
-                  <p>No results found for "{searchQuery}"</p>
-                  <p className="text-xs mt-1">Try "Bukhari 1" or "Surah 2"</p>
-              </div>
-          )}
-
-          {searchResults.map((result) => {
-              if (result.category === 'media') {
-                  return (
-                      <div key={result.id} onClick={() => handleSearchResultClick(result)}>
-                          <MediaCard item={result.data as MediaItem} />
-                      </div>
-                  );
-              }
-              return (
-                  <div 
-                    key={result.id} 
-                    onClick={() => handleSearchResultClick(result)}
-                    className="bg-white p-4 rounded-xl shadow-sm border border-gray-100 cursor-pointer hover:border-emerald-500 transition-colors"
-                  >
-                      <div className="flex justify-between items-start mb-1">
-                          <span className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded ${result.category === 'quran' ? 'bg-emerald-100 text-emerald-700' : 'bg-indigo-100 text-indigo-700'}`}>
-                              {result.category}
-                          </span>
-                      </div>
-                      <h4 className="font-bold text-gray-800">{result.title}</h4>
-                      <p className="text-sm text-gray-600 line-clamp-2 mt-1">{result.contentPreview || result.subtitle}</p>
-                  </div>
-              );
-          })}
-      </div>
-  );
-
   // --- MAIN RENDER ---
   return (
     <div className="h-full flex flex-col">
-         {/* Persistent Search Bar */}
-         <div className="sticky top-0 bg-[#f0fdf4] z-30 pt-4 pb-2 px-1">
-              <div className="relative">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
-                  <input 
-                      type="text" 
-                      placeholder="Search Quran, Hadith, or Library..."
-                      value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
-                      className="w-full bg-white pl-10 pr-10 py-3 rounded-xl border-none shadow-sm focus:ring-2 focus:ring-emerald-500"
-                  />
-                  {searchQuery && (
-                      <button onClick={clearSearch} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
-                          <X size={16} />
-                      </button>
-                  )}
-              </div>
-         </div>
+         {/* Removed Global Search Bar */}
 
          {/* Content Area */}
          <div className="flex-1 overflow-y-auto no-scrollbar">
-             {searchQuery.length > 0 ? (
-                 renderSearchResults()
-             ) : (
-                 <>
-                    {/* Tabs - Only show when NOT in deep views */}
-                    {activeTab !== 'hisn' || hisnView === 'chapters' ? (
-                        <div className="flex p-1 bg-gray-200/50 rounded-xl mb-4 mx-1 sticky top-0 z-20 backdrop-blur">
-                            {(['feed', 'hisn', 'library', 'media', 'ai'] as const).map(tabKey => (
-                                <button 
-                                    key={tabKey}
-                                    onClick={() => { setActiveTab(tabKey); setHisnView('chapters'); }}
-                                    className={`flex-1 py-2 rounded-lg text-[10px] sm:text-xs font-bold transition-all ${activeTab === tabKey ? 'bg-white text-emerald-700 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
-                                >
-                                    {t.ilmhub.tabs[tabKey]}
-                                </button>
-                            ))}
-                        </div>
-                    ) : null}
+            {/* Tabs - Only show when NOT in deep views */}
+            {activeTab !== 'hisn' || hisnView === 'chapters' ? (
+                <div className="flex p-1 bg-gray-200/50 rounded-xl mb-4 mx-1 sticky top-0 z-20 backdrop-blur">
+                    {(['feed', 'hisn', 'library', 'media', 'ai'] as const).map(tabKey => (
+                        <button 
+                            key={tabKey}
+                            onClick={() => { setActiveTab(tabKey); setHisnView('chapters'); }}
+                            className={`flex-1 py-2 rounded-lg text-[10px] sm:text-xs font-bold transition-all ${activeTab === tabKey ? 'bg-white text-emerald-700 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
+                        >
+                            {t.ilmhub.tabs[tabKey]}
+                        </button>
+                    ))}
+                </div>
+            ) : null}
 
-                    {activeTab === 'feed' && renderFeed()}
-                    {activeTab === 'hisn' && renderHisn()}
-                    {activeTab === 'library' && renderLibrary()}
-                    {activeTab === 'media' && renderMedia()}
-                    {activeTab === 'ai' && renderAI()}
-                 </>
-             )}
+            {activeTab === 'feed' && renderFeed()}
+            {activeTab === 'hisn' && renderHisn()}
+            {activeTab === 'library' && renderLibrary()}
+            {activeTab === 'media' && renderMedia()}
+            {activeTab === 'ai' && renderAI()}
          </div>
     </div>
   );

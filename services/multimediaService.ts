@@ -1,7 +1,9 @@
 
-import { MediaItem } from '../types';
+import { MediaItem } from '@/types';
 
 // --- HELPERS ---
+
+const PIPED_API_URL = 'https://pipedapi.kavin.rocks';
 
 const getThumbnailUrl = (videoId: string): string => {
     return `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`;
@@ -12,8 +14,15 @@ const getChannelLogo = (authorName: string): string => {
     return `https://ui-avatars.com/api/?name=${encoded}&background=random&color=fff&size=64&font-size=0.5&bold=true`;
 };
 
+const formatDuration = (seconds: number): string => {
+    const h = Math.floor(seconds / 3600);
+    const m = Math.floor((seconds % 3600) / 60);
+    const s = seconds % 60;
+    if (h > 0) return `${h}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+    return `${m}:${s.toString().padStart(2, '0')}`;
+}
+
 // --- CHANNEL DATABASE ---
-// We keep this here to map Categories to Authors, even though the API now fetches data.
 interface ChannelDef {
     id: string; 
     name: string;
@@ -85,22 +94,38 @@ export const MultimediaService = {
     },
 
     /**
-     * Search Media (Local Filter of the Aggregated Feed)
-     * To save API calls, we currently filter the cache or re-fetch with query.
+     * Search Media using Piped API (Privacy-friendly, no API Key)
      */
     searchMedia: async (query: string): Promise<MediaItem[]> => {
         try {
-            // We can call the API with ?query= param if we want server-side filtering
-            const response = await fetch(`/api/youtube-feed?query=${encodeURIComponent(query)}`);
+            const response = await fetch(`${PIPED_API_URL}/search?q=${encodeURIComponent(query)}&filter=videos`);
+            
             if (response.ok) {
-                const rawItems = await response.json();
-                return rawItems.map((item: any) => enrichMediaItem({ ...item, category: 'lecture' }));
+                const data = await response.json();
+                if (data.items && Array.isArray(data.items)) {
+                    return data.items.map((item: any) => {
+                        // Extract ID from URL (usually /watch?v=ID)
+                        const videoId = item.url.split('v=')[1] || item.url.replace(/^\//, '');
+                        
+                        return {
+                            id: videoId,
+                            title: item.title,
+                            author: item.uploaderName,
+                            type: 'video',
+                            category: 'lecture',
+                            url: `https://www.youtube.com/embed/${videoId}`,
+                            duration: item.duration ? formatDuration(item.duration) : '',
+                            thumbnail: item.thumbnail,
+                            channelLogo: item.uploaderAvatar
+                        };
+                    });
+                }
             }
         } catch (e) {
-            // Ignore and fallthrough to cache
+            console.warn("Piped API search failed", e);
         }
 
-        // Fallback: Search local cache
+        // Fallback: Search local cache if Piped fails
         const qLower = query.toLowerCase();
         const cacheResults = VIDEO_CACHE.filter(item => 
             item.title.toLowerCase().includes(qLower) || 
@@ -110,8 +135,6 @@ export const MultimediaService = {
     },
 
     getByCategory: async (category: string): Promise<MediaItem[]> => {
-        // Since we don't have a database, we return the cached items for the category
-        // In a real implementation, we would pass ?category= to the API
         const results = VIDEO_CACHE.filter(item => item.category === category);
         return results.map(enrichMediaItem);
     }
