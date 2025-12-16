@@ -34,7 +34,6 @@ export const IlmHubModule: React.FC<Props> = ({ t, language, onNavigateToQuran, 
   const [loadingStructure, setLoadingStructure] = useState(false);
   
   // Reader Layer (Content)
-  // Changed type definition to explicitly support HadithData array
   const [sectionContent, setSectionContent] = useState<HadithData[] | string | any[]>([]); 
   const [selectedSectionTitle, setSelectedSectionTitle] = useState('');
   
@@ -149,11 +148,10 @@ export const IlmHubModule: React.FC<Props> = ({ t, language, onNavigateToQuran, 
       if (selectedBook.sourceType === 'api_hadith' && selectedBook.apiId) {
            setSelectedSectionTitle(node.title);
            setLibView('reader');
-           setSectionContent([]); // Clear previous content, treat as loading if empty
+           setSectionContent([]); 
            
            try {
                const hadiths = await fetchHadiths(selectedBook.apiId, node.id, language);
-               // Store the raw array of objects to enable rich rendering
                setSectionContent(hadiths);
            } catch(e) {
                setSectionContent("Failed to load hadiths.");
@@ -644,7 +642,7 @@ export const IlmHubModule: React.FC<Props> = ({ t, language, onNavigateToQuran, 
                         id: item.id,
                         title: item.title,
                         author: item.source || '',
-                        type: item.mediaType,
+                        type: item.mediaType as 'video' | 'audio',
                         category: item.tags[0] as any || 'lecture',
                         url: item.mediaUrl || '',
                         thumbnail: item.thumbnailUrl
