@@ -1,19 +1,16 @@
-/**
- * Zelfstandige definitie van de MediaItem interface om TS2307 build-fouten op te lossen.
- * Dit elimineert afhankelijkheden van externe type-bestanden tijdens de Vercel build.
- */
+// --- LOCAL TYPE DEFINITION (Must match types.ts exactly for compatibility) ---
+
 export interface MediaItem {
     id: string;
     title: string;
     author: string;
-    type: 'video' | 'audio' | 'podcast';
-    category: 'quran' | 'lecture' | 'history' | 'fiqh' | string;
+    type: 'video' | 'audio'; // Removed 'podcast' to match types.ts
+    category: 'quran' | 'lecture' | 'history' | 'fiqh'; // Removed '| string' to match types.ts
     url: string;
     duration: string;
-    thumbnail: string;
-    // Optionele velden
-    channelLogo?: string;
+    thumbnail?: string;
     datePublished?: string;
+    channelLogo?: string; // Extra properties are allowed in assignment
 }
 
 // --- HELPERS ---
@@ -95,7 +92,7 @@ export const MultimediaService = {
                     ...item,
                     category: knownChannel ? knownChannel.cat : 'lecture',
                     type: 'video',
-                    duration: 'New' // API doesn't return duration yet, keep it simple
+                    duration: 'New' 
                 });
             });
 
@@ -127,7 +124,7 @@ export const MultimediaService = {
                             title: item.title,
                             author: item.uploaderName,
                             type: 'video',
-                            category: 'lecture',
+                            category: 'lecture', // Default to a valid category literal
                             url: `https://www.youtube.com/embed/${videoId}`,
                             duration: item.duration ? formatDuration(item.duration) : '',
                             thumbnail: item.thumbnail,
@@ -150,6 +147,8 @@ export const MultimediaService = {
     },
 
     getByCategory: async (category: string): Promise<MediaItem[]> => {
+        // Cast the string category to the union type, assuming caller knows valid categories
+        // or filter against the valid set if necessary.
         const results = VIDEO_CACHE.filter(item => item.category === category);
         return results.map(enrichMediaItem);
     }
