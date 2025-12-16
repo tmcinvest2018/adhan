@@ -37,7 +37,6 @@ export const MediaCard: React.FC<Props> = ({ item, className = '' }) => {
       : item.thumbnail;
 
   // 3. CHANNEL LOGO
-  // @ts-ignore - access injected property from MultimediaService
   const logoSrc = item.channelLogo || `https://ui-avatars.com/api/?name=${encodeURIComponent(item.author)}&background=random&color=fff&size=64&bold=true`;
 
   // 4. EMBED URL FIX: Added 'origin' to satisfy YouTube security in sandboxed iframes

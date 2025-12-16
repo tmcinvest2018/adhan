@@ -212,6 +212,7 @@ export interface MediaItem {
     duration: string;
     thumbnail?: string;
     datePublished?: string;
+    channelLogo?: string;
 }
 
 export interface ChatMessage {
