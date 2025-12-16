@@ -1,5 +1,5 @@
 
-import { MediaItem } from '@/types';
+import { MediaItem } from '../types';
 
 // --- HELPERS ---
 
