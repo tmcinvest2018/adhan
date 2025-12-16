@@ -1,4 +1,4 @@
-import { MediaItem } from '../types';
+import { MediaItem } from './multimedia.types';
 
 // --- HELPERS ---
 
