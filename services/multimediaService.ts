@@ -1,4 +1,20 @@
-import { MediaItem } from './multimedia.types';
+/**
+ * Zelfstandige definitie van de MediaItem interface om TS2307 build-fouten op te lossen.
+ * Dit elimineert afhankelijkheden van externe type-bestanden tijdens de Vercel build.
+ */
+export interface MediaItem {
+    id: string;
+    title: string;
+    author: string;
+    type: 'video' | 'audio' | 'podcast';
+    category: 'quran' | 'lecture' | 'history' | 'fiqh' | string;
+    url: string;
+    duration: string;
+    thumbnail: string;
+    // Optionele velden
+    channelLogo?: string;
+    datePublished?: string;
+}
 
 // --- HELPERS ---
 
@@ -165,7 +181,6 @@ function enrichMediaItem(item: MediaItem): MediaItem {
         title: cleanTitle,
         // Ensure thumbnail is high quality
         thumbnail: getThumbnailUrl(videoId),
-        // @ts-ignore - injecting logo property dynamically
         channelLogo: getChannelLogo(item.author)
     };
 }
