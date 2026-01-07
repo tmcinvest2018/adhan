@@ -21,5 +21,22 @@ export default defineConfig({
   },
   server: {
     port: 3000,
+    proxy: {
+      '/api/chat': {
+        target: 'http://localhost:3001',
+        changeOrigin: true,
+        secure: false,
+      },
+      '/api/mawaqit-proxy': {
+        target: 'http://localhost:3001',
+        changeOrigin: true,
+        secure: false,
+      },
+      '/api/youtube-feed': {
+        target: 'http://localhost:3001',
+        changeOrigin: true,
+        secure: false,
+      }
+    }
   },
 });

@@ -21,13 +21,17 @@ export default async function handler(req, res) {
 
   try {
     const { messages } = req.body;
-    
-    // 2. Load Environment Variables
-    const apiKey = process.env.AI_API_KEY;
-    const baseUrl = process.env.AI_BASE_URL; // e.g., https://generativelanguage.googleapis.com/v1beta/openai/
-    const modelId = process.env.AI_MODEL_ID || 'gemini-1.5-flash';
 
-    if (!apiKey || !baseUrl) {
+    // 2. Load Environment Variables
+    // Check for primary AI provider first (Google)
+    const apiKey = process.env.AI_API_KEY || process.env.NEXT_PUBLIC_GOOGLE_API_KEY;
+    const baseUrl = process.env.AI_BASE_URL || process.env.NEXT_PUBLIC_OLLAMA_BASE_URL;
+    const modelId = process.env.AI_MODEL_ID || process.env.NEXT_PUBLIC_OLLAMA_MODEL_ID || 'qwen2.5-coder:7b';
+
+    // Determine if we're using Ollama (no API key required)
+    const isOllama = baseUrl && (baseUrl.includes('11434') || baseUrl.includes('100.81.98.64'));
+
+    if (!isOllama && (!apiKey || !baseUrl)) {
       throw new Error('Server misconfiguration: Missing AI Credentials');
     }
 
@@ -56,28 +60,53 @@ export default async function handler(req, res) {
       - For complex personal, marital, or financial Fatawa, explicitly state: "For a specific Fatwa regarding your personal situation, please consult a local scholar or Imam."
     `;
 
-    // 4. Construct Universal (OpenAI-Compatible) Payload
-    const apiPayload = {
-      model: modelId,
-      messages: [
-        { role: "system", content: systemPrompt },
-        ...messages
-      ],
-      temperature: 0.3 // Low temperature for factual grounding
-    };
+    // 4. Construct payload based on provider
+    let apiPayload, endpoint, headers;
 
-    // 5. Call the Provider
-    // We assume AI_BASE_URL ends with a slash, e.g., ".../v1beta/openai/"
-    // We append "chat/completions" to match the standard
-    const endpoint = `${baseUrl.replace(/\/$/, '')}/chat/completions`;
+    if (isOllama) {
+      // Ollama format
+      apiPayload = {
+        model: modelId,
+        messages: [
+          { role: "system", content: systemPrompt },
+          ...messages
+        ],
+        stream: false, // We want a complete response
+        options: {
+          temperature: 0.3
+        }
+      };
 
-    const response = await fetch(endpoint, {
-      method: 'POST',
-      headers: {
+      // Ollama endpoint
+      endpoint = `${baseUrl.replace(/\/$/, '')}/chat`;
+
+      headers = {
+        'Content-Type': 'application/json'
+      };
+    } else {
+      // Google/OpenAI compatible format
+      apiPayload = {
+        model: modelId,
+        messages: [
+          { role: "system", content: systemPrompt },
+          ...messages
+        ],
+        temperature: 0.3 // Low temperature for factual grounding
+      };
+
+      // Google endpoint
+      endpoint = `${baseUrl.replace(/\/$/, '')}/chat/completions`;
+
+      headers = {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${apiKey}`,
         'x-goog-api-key': apiKey // Specific fallback for Google's OpenAI proxy if Bearer isn't accepted
-      },
+      };
+    }
+
+    const response = await fetch(endpoint, {
+      method: 'POST',
+      headers: headers,
       body: JSON.stringify(apiPayload)
     });
 
@@ -86,8 +115,37 @@ export default async function handler(req, res) {
       throw new Error(`AI Provider Error (${response.status}): ${errorText}`);
     }
 
-    const data = await response.json();
-    
+    const responseData = await response.json();
+
+    let data;
+    if (isOllama) {
+      // Convert Ollama response format to OpenAI-compatible format
+      data = {
+        id: responseData?.id || 'ollama-response',
+        object: 'chat.completion',
+        created: Math.floor(Date.now() / 1000),
+        model: modelId,
+        choices: [
+          {
+            index: 0,
+            message: {
+              role: 'assistant',
+              content: responseData?.message?.content || responseData?.response || ''
+            },
+            finish_reason: 'stop'
+          }
+        ],
+        usage: {
+          prompt_tokens: 0, // Ollama doesn't provide this in chat response
+          completion_tokens: 0,
+          total_tokens: 0
+        }
+      };
+    } else {
+      // Google/OpenAI format
+      data = responseData;
+    }
+
     // 6. Return standard response
     return res.status(200).json(data);
 

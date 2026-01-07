@@ -1,0 +1,434 @@
+import { createClient, SupabaseClient } from '@supabase/supabase-js';
+import { UkhuwwahProfile, ConnectionRequest, SearchResult, MediaItem, FeedItem } from '../types';
+
+interface Database {
+  public: {
+    Tables: {
+      users: {
+        Row: {
+          id: string;
+          created_at: string;
+          name: string;
+          email: string;
+          role: 'wakeel' | 'nasir' | 'muakhi';
+          gender: 'brother' | 'sister';
+          mosque_id?: string;
+          mosque_name?: string;
+          is_verified: boolean;
+          bio?: string;
+          avatar_color?: string;
+          preferences?: Record<string, any>;
+        };
+        Insert: {
+          id?: string;
+          created_at?: string;
+          name: string;
+          email: string;
+          role: 'wakeel' | 'nasir' | 'muakhi';
+          gender: 'brother' | 'sister';
+          mosque_name?: string;
+          is_verified?: boolean;
+          bio?: string;
+          avatar_color?: string;
+          preferences?: Record<string, any>;
+        };
+        Update: {
+          name?: string;
+          email?: string;
+          role?: 'wakeel' | 'nasir' | 'muakhi';
+          gender?: 'brother' | 'sister';
+          mosque_id?: string;
+          mosque_name?: string;
+          is_verified?: boolean;
+          bio?: string;
+          avatar_color?: string;
+          preferences?: Record<string, any>;
+        };
+      };
+      connection_requests: {
+        Row: {
+          id: string;
+          created_at: string;
+          from_user_id: string;
+          to_user_id: string;
+          type: 'mentorship' | 'verification';
+          status: 'pending' | 'accepted' | 'rejected';
+          message?: string;
+        };
+        Insert: {
+          id?: string;
+          created_at?: string;
+          from_user_id: string;
+          to_user_id: string;
+          type: 'mentorship' | 'verification';
+          status?: 'pending';
+          message?: string;
+        };
+        Update: {
+          status?: 'pending' | 'accepted' | 'rejected';
+          message?: string;
+        };
+      };
+      content: {
+        Row: {
+          id: string;
+          created_at: string;
+          title: string;
+          content: string;
+          type: 'quran' | 'hadith' | 'tafsir' | 'dua' | 'article' | 'media';
+          category: string;
+          tags: string[];
+          source?: string;
+          author?: string;
+          language: string;
+          metadata?: Record<string, any>;
+        };
+        Insert: {
+          id?: string;
+          created_at?: string;
+          title: string;
+          content: string;
+          type: 'quran' | 'hadith' | 'tafsir' | 'dua' | 'article' | 'media';
+          category: string;
+          tags: string[];
+          source?: string;
+          author?: string;
+          language: string;
+          metadata?: Record<string, any>;
+        };
+        Update: {
+          title?: string;
+          content?: string;
+          type?: 'quran' | 'hadith' | 'tafsir' | 'dua' | 'article' | 'media';
+          category?: string;
+          tags?: string[];
+          source?: string;
+          author?: string;
+          language?: string;
+          metadata?: Record<string, any>;
+        };
+      };
+      user_content_interactions: {
+        Row: {
+          id: string;
+          user_id: string;
+          content_id: string;
+          interaction_type: 'view' | 'like' | 'save' | 'share';
+          created_at: string;
+          metadata?: Record<string, any>;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          content_id: string;
+          interaction_type: 'view' | 'like' | 'save' | 'share';
+          created_at?: string;
+          metadata?: Record<string, any>;
+        };
+        Update: {
+          metadata?: Record<string, any>;
+        };
+      };
+    };
+    Views: {
+      [_ in never]: never;
+    };
+    Functions: {
+      [_ in never]: never;
+    };
+    Enums: {
+      [_ in never]: never;
+    };
+    CompositeTypes: {
+      [_ in never]: never;
+    };
+  };
+}
+
+export class SupabaseService {
+  private static instance: SupabaseService;
+  private client: SupabaseClient<Database>;
+
+  private constructor() {
+    const supabaseUrl = process.env.SUPABASE_URL;
+    const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+    if (!supabaseUrl || !supabaseKey) {
+      throw new Error('Supabase URL and Key are required');
+    }
+
+    this.client = createClient<Database>(supabaseUrl, supabaseKey);
+  }
+
+  public static getInstance(): SupabaseService {
+    if (!SupabaseService.instance) {
+      SupabaseService.instance = new SupabaseService();
+    }
+    return SupabaseService.instance;
+  }
+
+  getClient(): SupabaseClient<Database> {
+    return this.client;
+  }
+
+  // --- UKHUWWAH USER MANAGEMENT ---
+  async createUser(profile: Omit<UkhuwwahProfile, 'id'>): Promise<UkhuwwahProfile | null> {
+    const { data, error } = await this.client
+      .from('users')
+      .insert([{
+        name: profile.name,
+        email: `${profile.name.replace(/\s+/g, '.').toLowerCase()}@example.com`, // Generate a default email
+        role: profile.role,
+        gender: profile.gender,
+        mosque_name: profile.mosqueName,
+        is_verified: profile.isVerified ?? false,
+        bio: profile.bio,
+        avatar_color: profile.avatarColor
+      }])
+      .select()
+      .single();
+
+    if (error) {
+      console.error('Error creating user:', error);
+      return null;
+    }
+
+    return {
+      id: data.id,
+      name: data.name,
+      role: data.role as any,
+      gender: data.gender as any,
+      mosqueName: data.mosque_name,
+      isVerified: data.is_verified,
+      bio: data.bio,
+      avatarColor: data.avatar_color
+    };
+  }
+
+  async getUserById(userId: string): Promise<UkhuwwahProfile | null> {
+    const { data, error } = await this.client
+      .from('users')
+      .select('*')
+      .eq('id', userId)
+      .single();
+
+    if (error) {
+      console.error('Error fetching user:', error);
+      return null;
+    }
+
+    if (!data) return null;
+
+    return {
+      id: data.id,
+      name: data.name,
+      role: data.role as any,
+      gender: data.gender as any,
+      mosqueName: data.mosque_name,
+      isVerified: data.is_verified,
+      bio: data.bio,
+      avatarColor: data.avatar_color
+    };
+  }
+
+  async updateUser(userId: string, updates: Partial<UkhuwwahProfile>): Promise<UkhuwwahProfile | null> {
+    const { data, error } = await this.client
+      .from('users')
+      .update({
+        name: updates.name,
+        role: updates.role,
+        mosque_name: updates.mosqueName,
+        is_verified: updates.isVerified,
+        bio: updates.bio,
+        avatar_color: updates.avatarColor
+      })
+      .eq('id', userId)
+      .select()
+      .single();
+
+    if (error) {
+      console.error('Error updating user:', error);
+      return null;
+    }
+
+    return {
+      id: data.id,
+      name: data.name,
+      role: data.role as any,
+      gender: data.gender as any,
+      mosqueName: data.mosque_name,
+      isVerified: data.is_verified,
+      bio: data.bio,
+      avatarColor: data.avatar_color
+    };
+  }
+
+  async getFeedUsers(currentUser: UkhuwwahProfile | null): Promise<UkhuwwahProfile[]> {
+    // In a real implementation, we would query the users table
+    // For now, return an empty array since we don't have a users table structure in Supabase yet
+    // This would be implemented with a proper users table in the future
+    return [];
+  }
+
+  // --- CONNECTION REQUESTS ---
+  async sendConnectionRequest(request: Omit<ConnectionRequest, 'id' | 'timestamp' | 'status'>): Promise<ConnectionRequest | null> {
+    const { data, error } = await this.client
+      .from('connection_requests')
+      .insert([{
+        from_user_id: request.fromId,
+        to_user_id: request.toId,
+        type: request.type,
+        status: 'pending'
+      }])
+      .select()
+      .single();
+
+    if (error) {
+      console.error('Error sending connection request:', error);
+      return null;
+    }
+
+    return {
+      id: data.id,
+      fromId: data.from_user_id,
+      fromName: request.fromName, // This would come from the user profile
+      toId: data.to_user_id,
+      type: data.type,
+      status: data.status,
+      timestamp: new Date(data.created_at).getTime()
+    };
+  }
+
+  async getPendingRequests(userId: string): Promise<ConnectionRequest[]> {
+    const { data, error } = await this.client
+      .from('connection_requests')
+      .select('*')
+      .eq('to_user_id', userId)
+      .eq('status', 'pending');
+
+    if (error) {
+      console.error('Error fetching pending requests:', error);
+      return [];
+    }
+
+    // In a real implementation, we would fetch the fromName from the users table
+    return data.map(req => ({
+      id: req.id,
+      fromId: req.from_user_id,
+      fromName: 'Unknown', // Would fetch from users table
+      toId: req.to_user_id,
+      type: req.type,
+      status: req.status,
+      timestamp: new Date(req.created_at).getTime()
+    }));
+  }
+
+  async respondToRequest(requestId: string, status: 'accepted' | 'rejected'): Promise<boolean> {
+    const { error } = await this.client
+      .from('connection_requests')
+      .update({ status })
+      .eq('id', requestId);
+
+    return !error;
+  }
+
+  // --- CONTENT MANAGEMENT ---
+  async searchContent(query: string, category?: string): Promise<SearchResult[]> {
+    let queryBuilder = this.client
+      .from('content')
+      .select('id, title, content, type, category, tags, source, author')
+      .or(`title.ilike.%${query}%,content.ilike.%${query}%`);
+
+    if (category) {
+      queryBuilder = queryBuilder.eq('category', category);
+    }
+
+    const { data, error } = await queryBuilder.limit(20);
+
+    if (error) {
+      console.error('Error searching content:', error);
+      return [];
+    }
+
+    return data.map(item => ({
+      id: `content_${item.id}`,
+      category: item.type as any,
+      title: item.title,
+      subtitle: item.author || item.source || 'Unknown',
+      contentPreview: item.content.substring(0, 100) + '...',
+      data: {
+        contentId: item.id,
+        title: item.title,
+        content: item.content,
+        type: item.type,
+        source: item.source,
+        author: item.author
+      }
+    }));
+  }
+
+  async getAllContent(): Promise<SearchResult[]> {
+    const { data, error } = await this.client
+      .from('content')
+      .select('id, title, content, type, category, tags, source, author')
+      .limit(100);
+
+    if (error) {
+      console.error('Error fetching all content:', error);
+      return [];
+    }
+
+    return data.map(item => ({
+      id: `content_${item.id}`,
+      category: item.type as any,
+      title: item.title,
+      subtitle: item.author || item.source || 'Unknown',
+      contentPreview: item.content.substring(0, 100) + '...',
+      data: {
+        contentId: item.id,
+        title: item.title,
+        content: item.content,
+        type: item.type,
+        source: item.source,
+        author: item.author
+      }
+    }));
+  }
+
+  async getFeedContent(limit: number = 10): Promise<FeedItem[]> {
+    const { data, error } = await this.client
+      .from('content')
+      .select('id, title, content, type, category, created_at')
+      .order('created_at', { ascending: false })
+      .limit(limit);
+
+    if (error) {
+      console.error('Error fetching feed content:', error);
+      return [];
+    }
+
+    return data.map((item, index) => ({
+      id: `feed_${item.id}`,
+      type: 'featured_text',
+      mediaType: 'text',
+      title: item.title,
+      content: item.content.substring(0, 150) + '...',
+      source: item.category,
+      dateStr: new Date(item.created_at).toLocaleDateString(),
+      tags: [item.category]
+    }));
+  }
+
+  // --- CONTENT INTERACTIONS ---
+  async recordContentInteraction(userId: string, contentId: string, interactionType: 'view' | 'like' | 'save' | 'share'): Promise<boolean> {
+    const { error } = await this.client
+      .from('user_content_interactions')
+      .insert([{
+        user_id: userId,
+        content_id: contentId,
+        interaction_type: interactionType
+      }]);
+
+    return !error;
+  }
+}

@@ -5,6 +5,8 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "dev:api": "node server.js",
+    "dev:fullstack": "node fullstack-server.js",
     "build": "tsc && vite build",
     "preview": "vite preview",
     "seed:quran": "node scripts/seed-quran.js",
