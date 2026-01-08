@@ -14,8 +14,8 @@ class LocalAIService {
     
     this.initializationPromise = new Promise((resolve, reject) => {
       try {
-        // Create worker instance
-        this.worker = new Worker('/worker/AIWorker.js');
+        // Create worker instance - using relative path for local model
+        this.worker = new Worker('./worker/AIWorker.js');
         
         // Set up message handling
         this.worker.onmessage = (event) => {
