@@ -319,32 +319,14 @@ export const IlmHubModule: React.FC<Props> = ({ t, language, onNavigateToQuran, 
           }
       }
 
-      // --- RAG STEP 3: SERVERLESS PROXY CALL ---
-      // Instead of calling Google SDK directly, we call our Vercel API
-      const response = await fetch('/api/chat', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          messages: [
-            { 
-              role: 'user', 
-              content: `${contextString}\n\nUSER QUESTION: ${userMsgText}` 
-            }
-          ]
-        })
-      });
+      // --- RAG STEP 3: LOCAL AI PROCESSING ---
+      // Use local AI service with client-side model
+      const { localAIService } = await import('../services/LocalAIService');
 
-      if (!response.ok) {
-          throw new Error('Network response was not ok');
-      }
+      // Initialize the service if not already done
+      await localAIService.initialize();
 
-      const data = await response.json();
-      
-      // OpenAI-compatible response format usually: data.choices[0].message.content
-      // If the backend simply returns data (based on my previous implementation), we might need to adjust.
-      // But let's assume standard OpenAI format or adjust if Google returns differently via the proxy.
-      // Since my proxy returns `res.json(data)` from Google's OpenAI endpoint, it follows OpenAI structure.
-      const responseText = data.choices?.[0]?.message?.content || "Excuses, er is een fout opgetreden bij het verwerken van het antwoord.";
+      const responseText = await localAIService.sendMessage(contextString, userMsgText);
 
       setMessages(prev => [...prev, { id: Date.now().toString(), role: 'assistant', text: responseText, timestamp: Date.now() }]);
       if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
