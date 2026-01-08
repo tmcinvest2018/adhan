@@ -10,8 +10,8 @@ env.useRemoteModels = false;
 
 class AIPipeline {
   static task = 'text-generation';
-  // Use the Xenova-converted model that works with Transformers.js
-  static model = 'Xenova/qwen2.5-0.5b-instruct'; // Model that's optimized for browser use
+  // Use the local model path that contains all the necessary files
+  static model = './assets/models/qwen2.5-0.5b-instruct-onnx/'; // Local model path
 
   static instance = null;
 
@@ -20,9 +20,7 @@ class AIPipeline {
   }
 
   async init() {
-    // Load the text generation pipeline
-    // The first time this runs, it will download the model to the cache
-    // Subsequent runs will use the cached version
+    // Load the text generation pipeline from local assets
     this.generator = await pipeline(
       AIPipeline.task,
       AIPipeline.model,
