@@ -274,12 +274,12 @@ export const IlmHubModule: React.FC<Props> = ({ t, language, onNavigateToQuran, 
     if (!chatInput.trim()) return;
     const userMsgText = chatInput;
     const userMsg: ChatMessage = { id: Date.now().toString(), role: 'user', text: userMsgText, timestamp: Date.now() };
-    setMessages(prev => [...prev, userMsg]); 
-    setChatInput(''); 
-    setIsTyping(true); 
-    setAiSuggestions([]); 
+    setMessages(prev => [...prev, userMsg]);
+    setChatInput('');
+    setIsTyping(true);
+    setAiSuggestions([]);
     setAiSources([]);
-    
+
     try {
       // --- RAG STEP 1: RETRIEVAL ---
       // Execute a search against our internal databases to find grounding context
@@ -295,7 +295,7 @@ export const IlmHubModule: React.FC<Props> = ({ t, language, onNavigateToQuran, 
 
       // --- RAG STEP 2: CONTEXT CONSTRUCTION ---
       let contextString = "### RAG DATA CONTEXT ###\n";
-      
+
       if (textSources.length === 0 && videoResults.length === 0) {
           contextString += "No specific internal documents found. Rely on general Islamic principles within the defined Scholar Persona.\n";
       } else {
@@ -323,6 +323,18 @@ export const IlmHubModule: React.FC<Props> = ({ t, language, onNavigateToQuran, 
       // Use local AI service with client-side model
       const { localAIService } = await import('../services/LocalAIService');
 
+      // Set up progress callback to provide visual feedback
+      localAIService.setProgressCallback((progress) => {
+        if (progress.type === 'starting') {
+          setIsTyping(true);
+        } else if (progress.type === 'progress') {
+          // Could update a progress bar or status message here
+          console.log('AI Model Progress:', progress);
+        } else if (progress.type === 'initialized') {
+          console.log('AI Model Ready:', progress.message);
+        }
+      });
+
       // Initialize the service if not already done
       await localAIService.initialize();
 
@@ -330,9 +342,9 @@ export const IlmHubModule: React.FC<Props> = ({ t, language, onNavigateToQuran, 
 
       setMessages(prev => [...prev, { id: Date.now().toString(), role: 'assistant', text: responseText, timestamp: Date.now() }]);
       if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
-    } catch (err) { 
+    } catch (err) {
         console.error(err);
-        setMessages(prev => [...prev, { id: Date.now().toString(), role: 'assistant', text: "Er is een technische fout opgetreden bij het raadplegen van de kennisbank.", timestamp: Date.now() }]); 
+        setMessages(prev => [...prev, { id: Date.now().toString(), role: 'assistant', text: "Er is een technische fout opgetreden bij het raadplegen van de kennisbank.", timestamp: Date.now() }]);
     }
     setIsTyping(false);
   };

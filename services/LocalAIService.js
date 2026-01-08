@@ -4,33 +4,50 @@ class LocalAIService {
     this.worker = null;
     this.isInitialized = false;
     this.initializationPromise = null;
+    this.onProgressCallback = null;
   }
-  
+
+  setProgressCallback(callback) {
+    this.onProgressCallback = callback;
+  }
+
   async initialize() {
     // Prevent multiple initializations
     if (this.initializationPromise) {
       return this.initializationPromise;
     }
-    
+
     this.initializationPromise = new Promise((resolve, reject) => {
       try {
         // Create worker instance - using relative path for local model
         this.worker = new Worker('./worker/AIWorker.js');
-        
+
         // Set up message handling
         this.worker.onmessage = (event) => {
-          const { message_id, status, result, error } = event.data;
-          
+          const { message_id, status, result, error, ...rest } = event.data;
+
           if (status === 'ready') {
             this.isInitialized = true;
+            if (this.onProgressCallback) {
+              this.onProgressCallback({ type: 'initialized', message: 'AI model loaded successfully' });
+            }
             resolve();
+          } else if (status === 'progress') {
+            // Handle progress updates during model download/init
+            if (this.onProgressCallback) {
+              this.onProgressCallback({ type: 'progress', ...rest });
+            }
           } else if (status === 'error') {
             reject(new Error(error));
           }
         };
-        
+
         // Send initialization message
         const messageId = 'init_' + Date.now();
+        if (this.onProgressCallback) {
+          this.onProgressCallback({ type: 'starting', message: 'Initializing AI model...' });
+        }
+
         this.worker.postMessage({
           message_id: messageId,
           function_call: 'init',
@@ -40,41 +57,46 @@ class LocalAIService {
         reject(error);
       }
     });
-    
+
     return this.initializationPromise;
   }
-  
+
   async sendMessage(context, userMessage) {
     if (!this.isInitialized) {
       await this.initialize();
     }
-    
+
     return new Promise((resolve, reject) => {
       const messageId = 'generate_' + Date.now();
-      
+
       // Set up response handler
       const messageHandler = (event) => {
-        const { message_id, status, result, error } = event.data;
-        
+        const { message_id, status, result, error, ...rest } = event.data;
+
         if (message_id === messageId) {
           if (status === 'complete') {
             resolve(result);
           } else if (status === 'error') {
             reject(new Error(error));
+          } else if (status === 'progress') {
+            // Handle generation progress if needed
+            if (this.onProgressCallback) {
+              this.onProgressCallback({ type: 'generating', ...rest });
+            }
           }
-          
+
           // Remove listener after handling
           this.worker.removeEventListener('message', messageHandler);
         }
       };
-      
+
       this.worker.addEventListener('message', messageHandler);
-      
+
       // Define the Scholar Persona
       const systemPrompt = `You are Noor AI, a high-authority Islamic Knowledge Center and virtual Scholar.
 
 MANDATORY RULES:
-1. GREETING: You MUST start every single response with exactly: "Bismillahi wa salaatu wa salaamu 'alaa Rasoolillaah..." followed by a newline.
+1. GREETING: You MUST start every single response with exactly: "Bismillahi wa salaatu wa salaamu 'alaa Rasoorillaah..." followed by a newline.
 2. CLOSING: You MUST end every single response with exactly: "Wa Allahu a'la wa a'lam."
 3. TONE: Scholarly, serene, respectful, and authoritative yet humble.
 
