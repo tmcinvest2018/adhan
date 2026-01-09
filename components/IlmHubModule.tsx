@@ -321,7 +321,7 @@ export const IlmHubModule: React.FC<Props> = ({ t, language, onNavigateToQuran, 
 
       // --- RAG STEP 3: LOCAL AI PROCESSING ---
       // Use local AI service with client-side model
-      const { localAIService } = await import('../services/LocalAIService');
+      const { localAIService } = await import('../services/localAIService');
 
       // Set up progress callback to provide visual feedback
       localAIService.setProgressCallback((progress) => {

@@ -11,7 +11,7 @@ env.useRemoteModels = false;
 class AIPipeline {
   static task = 'text-generation';
   // Use the local model path that contains all the necessary files
-  static model = './assets/models/qwen2.5-0.5b-instruct-onnx/'; // Local model path
+  static model = './assets/models/qwen2.5-0.5b-instruct-onnx'; // Local model path (without trailing slash)
 
   static instance = null;
 

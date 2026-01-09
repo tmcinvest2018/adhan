@@ -1,22 +1,103 @@
 import { ChatMessage } from '../types';
 
-interface LocalAIConfig {
-  baseUrl: string;
-  model: string;
+interface ProgressCallback {
+  type: 'starting' | 'progress' | 'initialized' | 'generating';
+  message?: string;
+  percentage?: number;
+  step?: string;
+  details?: any;
 }
 
 class LocalAIService {
-  private config: LocalAIConfig;
+  private worker: Worker | null = null;
+  private isInitialized = false;
+  private initializationPromise: Promise<void> | null = null;
+  private onProgressCallback: ((progress: ProgressCallback) => void) | null = null;
 
-  constructor() {
-    this.config = {
-      baseUrl: 'http://localhost:11434/api',
-      model: 'qwen2.5:0.5b'
-    };
+  setProgressCallback(callback: (progress: ProgressCallback) => void) {
+    this.onProgressCallback = callback;
   }
 
-  async sendMessage(messages: ChatMessage[], contextString: string): Promise<string> {
-    try {
+  async initialize(): Promise<void> {
+    if (this.initializationPromise) {
+      return this.initializationPromise;
+    }
+
+    this.initializationPromise = new Promise((resolve, reject) => {
+      try {
+        // Create worker instance - using relative path for local model
+        this.worker = new Worker(new URL('../worker/AIWorker.js', import.meta.url));
+
+        // Set up message handling
+        this.worker.onmessage = (event) => {
+          const { message_id, status, result, error, ...rest } = event.data;
+
+          if (status === 'ready') {
+            this.isInitialized = true;
+            if (this.onProgressCallback) {
+              this.onProgressCallback({ type: 'initialized', message: 'AI model loaded successfully' });
+            }
+            resolve();
+          } else if (status === 'progress') {
+            // Handle progress updates during model download/init
+            if (this.onProgressCallback) {
+              this.onProgressCallback({ type: 'progress', ...rest });
+            }
+          } else if (status === 'error') {
+            reject(new Error(error));
+          }
+        };
+
+        // Send initialization message
+        const messageId = 'init_' + Date.now();
+        if (this.onProgressCallback) {
+          this.onProgressCallback({ type: 'starting', message: 'Initializing AI model...' });
+        }
+
+        this.worker.postMessage({
+          message_id: messageId,
+          function_call: 'init',
+          args: {}
+        });
+      } catch (error) {
+        reject(error);
+      }
+    });
+
+    return this.initializationPromise;
+  }
+
+  async sendMessage(contextString: string, userMessage: string): Promise<string> {
+    if (!this.isInitialized) {
+      await this.initialize();
+    }
+
+    return new Promise((resolve, reject) => {
+      const messageId = 'generate_' + Date.now();
+
+      // Set up response handler
+      const messageHandler = (event) => {
+        const { message_id, status, result, error, ...rest } = event.data;
+
+        if (message_id === messageId) {
+          if (status === 'complete') {
+            resolve(result);
+          } else if (status === 'error') {
+            reject(new Error(error));
+          } else if (status === 'progress') {
+            // Handle generation progress if needed
+            if (this.onProgressCallback) {
+              this.onProgressCallback({ type: 'generating', ...rest });
+            }
+          }
+
+          // Remove listener after handling
+          this.worker?.removeEventListener('message', messageHandler);
+        }
+      };
+
+      this.worker?.addEventListener('message', messageHandler);
+
       // Define the Scholar Persona
       const systemPrompt = `You are Noor AI, a high-authority Islamic Knowledge Center and virtual Scholar.
 
@@ -38,38 +119,31 @@ B. SCHOLAR MODE (If input is a question like "How to pray?", "Is music haram?", 
    - If the CONTEXT is empty, provide a general answer based on standard Islamic knowledge but preface it with "Based on general Islamic principles..." and strictly warn that specific verification is needed.
 
 REFERRAL POLICY:
-- For complex personal, marital, or financial Fatawa, explicitly state: "For a specific Fatwa regarding your personal situation, please consult a local scholar or Imam."`;
+- For complex personal, marital or financial Fatawa, explicitly state: "For a specific Fatwa regarding your personal situation, please consult a local scholar or Imam."`;
 
-      const requestBody = {
-        model: this.config.model,
-        messages: [
-          { role: "system", content: systemPrompt },
-          { role: "user", content: `${contextString}\n\nUSER QUESTION: ${messages[messages.length - 1].text}` }
-        ],
-        stream: false,
-        options: {
-          temperature: 0.3
+      // Create the full prompt
+      const fullPrompt = `<|system|>
+${systemPrompt}
+<|user|>
+${contextString}
+
+USER QUESTION: ${userMessage}
+<|assistant|>`;
+
+      // Send generation request
+      this.worker?.postMessage({
+        message_id: messageId,
+        function_call: 'generate',
+        args: {
+          text: fullPrompt,
+          options: {
+            max_new_tokens: 300,
+            temperature: 0.3,
+            repetition_penalty: 1.1
+          }
         }
-      };
-
-      const response = await fetch(`${this.config.baseUrl}/chat`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(requestBody)
       });
-
-      if (!response.ok) {
-        throw new Error(`Local AI Error: ${response.statusText}`);
-      }
-
-      const data = await response.json();
-      return data?.message?.content || data?.response || "Sorry, I couldn't process that request.";
-    } catch (error) {
-      console.error('Local AI Service Error:', error);
-      return "Sorry, there was an issue processing your request. Please try again.";
-    }
+    });
   }
 }
 

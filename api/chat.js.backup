@@ -24,16 +24,12 @@ export default async function handler(req, res) {
 
     // 2. Load Environment Variables
     // Check for primary AI provider first (Google)
-    const apiKey = process.env.AI_API_KEY || process.env.NEXT_PUBLIC_GOOGLE_API_KEY;
-    const baseUrl = process.env.AI_BASE_URL || process.env.NEXT_PUBLIC_OLLAMA_BASE_URL;
-    const modelId = process.env.AI_MODEL_ID || process.env.NEXT_PUBLIC_OLLAMA_MODEL_ID || 'qwen2.5-coder:7b';
+    // Use hardcoded ONNX model for local Ollama
+    const baseUrl = 'http://localhost:11434/api';
+    const modelId = 'qwen2.5:0.5b'; // Hardcoded ONNX model
 
-    // Determine if we're using Ollama (no API key required)
-    const isOllama = baseUrl && (baseUrl.includes('11434') || baseUrl.includes('100.81.98.64'));
-
-    if (!isOllama && (!apiKey || !baseUrl)) {
-      throw new Error('Server misconfiguration: Missing AI Credentials');
-    }
+    // We're always using Ollama with the hardcoded model
+    const isOllama = true;
 
     // 3. Define the Scholar Persona (Moved from Frontend for security & consistency)
     const systemPrompt = `
