@@ -17,6 +17,8 @@ if (!HF_TOKEN) {
   process.exit(1);
 }
 
+console.log('HF_TOKEN loaded:', HF_TOKEN ? 'Yes' : 'No');
+
 app.post('/api/hf-inference', async (req, res) => {
   console.log('Received request:', req.body);
   const { message } = req.body;
