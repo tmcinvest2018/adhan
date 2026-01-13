@@ -31,6 +31,11 @@ export default defineConfig({
         target: 'http://localhost:3001',
         changeOrigin: true,
         secure: false,
+      },
+      '/api/hf-inference': {
+        target: 'http://localhost:3002',
+        changeOrigin: true,
+        secure: false,
       }
     }
   },

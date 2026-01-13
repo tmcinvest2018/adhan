@@ -319,26 +319,27 @@ export const IlmHubModule: React.FC<Props> = ({ t, language, onNavigateToQuran, 
           }
       }
 
-      // --- RAG STEP 3: LOCAL AI PROCESSING ---
-      // Use local AI service with client-side model
-      const { localAIService } = await import('../services/localAIService');
+      // --- RAG STEP 3: REAL AI PROCESSING FOR ASK AI TAB ---
+      // Use real AI service for the Ask AI tab
+      setIsTyping(true);
 
-      // Set up progress callback to provide visual feedback
-      localAIService.setProgressCallback((progress) => {
-        if (progress.type === 'starting') {
-          setIsTyping(true);
-        } else if (progress.type === 'progress') {
-          // Could update a progress bar or status message here
-          console.log('AI Model Progress:', progress);
-        } else if (progress.type === 'initialized') {
-          console.log('AI Model Ready:', progress.message);
-        }
+      // Call our backend server which will connect to Hugging Face API
+      const response = await fetch('/api/hf-inference', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          message: `Context: ${contextString}\n\nQuestion: ${userMsgText}`
+        })
       });
 
-      // Initialize the service if not already done
-      await localAIService.initialize();
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
 
-      const responseText = await localAIService.sendMessage(contextString, userMsgText);
+      const data = await response.json();
+      const responseText = data.response || "Sorry, I couldn't process your request at the moment.";
 
       setMessages(prev => [...prev, { id: Date.now().toString(), role: 'assistant', text: responseText, timestamp: Date.now() }]);
       if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight;

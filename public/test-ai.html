@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Test</title>
+    <script src="https://cdn.jsdelivr.net/npm/@xenova/transformers@3.0.0/dist/transformers.min.js"></script>
+</head>
+<body>
+    <h1>AI Model Test</h1>
+    <p>This page tests if the AI model can load and run in your browser.</p>
+    
+    <div>
+        <label for="inputText">Enter your message:</label>
+        <input type="text" id="inputText" value="Hello, how are you?" style="width: 300px;">
+        <button onclick="testAI()">Test AI</button>
+    </div>
+    
+    <div>
+        <h3>Output:</h3>
+        <pre id="output" style="background-color: #f0f0f0; padding: 10px; white-space: pre-wrap;"></pre>
+    </div>
+
+    <script>
+        async function testAI() {
+            const inputText = document.getElementById('inputText').value;
+            const outputDiv = document.getElementById('output');
+            outputDiv.textContent = 'Loading model...';
+            
+            try {
+                // Load the pipeline
+                const { pipeline } = await import('https://cdn.jsdelivr.net/npm/@xenova/transformers@3.0.0/+esm');
+                
+                // Create the text generation pipeline with local model
+                const generator = await pipeline(
+                    'text-generation', 
+                    './assets/models/qwen2.5-0.5b-instruct-onnx',
+                    {
+                        progress_callback: (data) => {
+                            outputDiv.textContent += `\nProgress: ${JSON.stringify(data)}`;
+                        }
+                    }
+                );
+                
+                // Generate text
+                const response = await generator(inputText, {
+                    max_new_tokens: 100,
+                    temperature: 0.7
+                });
+                
+                outputDiv.textContent = JSON.stringify(response, null, 2);
+            } catch (error) {
+                outputDiv.textContent = `Error: ${error.message}\nStack: ${error.stack}`;
+                console.error(error);
+            }
+        }
+        
+        // Test basic functionality on load
+        window.onload = function() {
+            document.getElementById('output').textContent = 'Page loaded. Click "Test AI" to begin.';
+        };
+    </script>
+</body>
+</html>
