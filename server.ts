@@ -9,7 +9,13 @@ const PORT = 3002;
 app.use(cors());
 app.use(express.json());
 
-const HF_TOKEN = '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';
+const HF_TOKEN = process.env.HF_TOKEN || process.env.VITE_HF_TOKEN;
+
+// Ensure HF_TOKEN is set
+if (!HF_TOKEN) {
+  console.error('HF_TOKEN environment variable is not set. Please set it in your .env file.');
+  process.exit(1);
+}
 
 app.post('/api/hf-inference', async (req, res) => {
   console.log('Received request:', req.body);
