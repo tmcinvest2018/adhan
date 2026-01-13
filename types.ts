@@ -269,7 +269,59 @@ export interface ConnectionRequest {
     fromId: string;
     fromName: string;
     toId: string; // Nasir ID or Wakeel ID (for verification)
-    type: 'mentorship' | 'verification'; 
+    type: 'mentorship' | 'verification';
     status: 'pending' | 'accepted' | 'rejected';
     timestamp: number;
+}
+
+// --- MISSING TYPES FOR BUILD ---
+
+export interface UserLocation {
+  latitude: number;
+  longitude: number;
+  name?: string;
+}
+
+export interface PrayerSettings {
+  calculationMethod: string;
+  madhab: string;
+  adjustments: Partial<Record<string, number>>;
+}
+
+export interface PrayerTime {
+  name: string;
+  time: Date;
+  timestamp: number;
+}
+
+export interface PrayerTimeDisplay {
+  name: string;
+  time: string;
+  isNext: boolean;
+  isCurrent: boolean;
+  timeLeft?: string;
+}
+
+export interface UserCoordinates {
+  latitude: number;
+  longitude: number;
+}
+
+export interface PrayerKey extends String {
+  // This extends string to allow values like 'fajr', 'dhuhr', etc.
+}
+
+export interface PrayerSettings {
+  calculationMethod: string;
+  madhab: string;
+  adjustments: Partial<Record<PrayerKey, number>>;
+}
+
+export interface PrayerTime {
+  fajr: Date;
+  sunrise: Date;
+  dhuhr: Date;
+  asr: Date;
+  maghrib: Date;
+  isha: Date;
 }

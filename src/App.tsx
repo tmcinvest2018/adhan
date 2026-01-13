@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { PrayerTimesContainer } from './modules/prayer-times/PrayerTimes.container';
-import { AIInterfaceContainer } from './modules/ai-interface/AIInterface.container';
+import { SimpleAIChat } from './components/SimpleAIChat';
 import { StateManagerService } from './infrastructure/persistence/StateManager.service';
 import { UserLocation, PrayerSettings } from '../types';
 import { Clock, GraduationCap, Settings } from 'lucide-react';
@@ -83,7 +83,7 @@ const App: React.FC = () => {
               <GraduationCap size={24} className="text-emerald-600" /> Al-Noor AI
             </h2>
             <div className="h-[500px]">
-              <AIInterfaceContainer />
+              <SimpleAIChat />
             </div>
           </div>
         )}
