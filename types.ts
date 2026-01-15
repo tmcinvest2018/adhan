@@ -1,5 +1,3 @@
-
-
 export enum CalculationMethod {
   MWL = 'MuslimWorldLeague',
   ISNA = 'NorthAmerica',
@@ -33,12 +31,6 @@ export interface NotificationConfig {
 }
 
 export type PrayerKey = 'fajr' | 'sunrise' | 'dhuhr' | 'asr' | 'maghrib' | 'isha';
-
-export interface QuranVisuals {
-    fontStyle: 'uthmani' | 'indopak';
-    fontSize: number;
-    showTajweed: boolean;
-}
 
 export interface AppSettings {
   method: CalculationMethod;
@@ -192,7 +184,7 @@ export interface LibraryBook {
   apiId?: string;
   structureCdnUrl?: string;
   contentCdnUrl?: string;
-  content?: string; 
+  content?: string;
   chapters?: any[];
 }
 
@@ -289,12 +281,15 @@ export interface PrayerSettings {
 }
 
 export interface PrayerTime {
-  name: string;
-  time: Date;
-  timestamp: number;
+  fajr: Date;
+  sunrise: Date;
+  dhuhr: Date;
+  asr: Date;
+  maghrib: Date;
+  isha: Date;
 }
 
-export interface PrayerTimeDisplay {
+export interface PrayerTimeDisplayWithStringTime {
   name: string;
   time: string;
   isNext: boolean;
@@ -302,26 +297,8 @@ export interface PrayerTimeDisplay {
   timeLeft?: string;
 }
 
-export interface UserCoordinates {
-  latitude: number;
-  longitude: number;
-}
-
-export interface PrayerKey extends String {
-  // This extends string to allow values like 'fajr', 'dhuhr', etc.
-}
-
-export interface PrayerSettings {
-  calculationMethod: string;
-  madhab: string;
-  adjustments: Partial<Record<PrayerKey, number>>;
-}
-
-export interface PrayerTime {
-  fajr: Date;
-  sunrise: Date;
-  dhuhr: Date;
-  asr: Date;
-  maghrib: Date;
-  isha: Date;
+export interface QuranVisuals {
+    fontStyle: 'uthmani' | 'indopak';
+    fontSize: number;
+    showTajweed: boolean;
 }

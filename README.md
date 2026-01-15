@@ -41,6 +41,43 @@ Our mission is to provide a serene, ad-free, and distraction-less digital enviro
 - **Hardware APIs:** Geolocation, DeviceOrientation, and Haptic Feedback.
 - **Offline First:** Local caching of library structures and PWA capabilities for use without an active connection.
 
+## 📁 Files Needing Review
+The following files are currently unused in the active build and should be reviewed for potential removal or integration:
+
+### Unused Frontend Files:
+- `src/core/domain/entities/PrayerTime.entity.ts` - Contains only comments about consolidated types
+
+### Unused Backend Services (in `/services` directory):
+- `ContextService.ts`
+- `SearchService.ts`
+- `downloadService.ts`
+- `geoService.ts`
+- `hadithService.ts`
+- `hisnData.ts`
+- `hisnService.ts`
+- `ilmHubData.ts`
+- `knowledgeData.ts`
+- `libraryData.ts`
+- `libraryService.ts`
+- `locationService.ts`
+- `mosqueService.ts`
+- `multimediaService.ts`
+- `quranService.ts`
+- `supabaseService.ts.backup`
+- `tafseerService.ts`
+- `translations.ts`
+- `ukhuwwahService.ts`
+- `youtubeService.ts`
+
+### Unused Module Directories (in `src/modules`):
+- `ai-interface/`
+- `ilm-hub/`
+- `media-center/`
+- `qibla-compass/`
+- `quran-reader/`
+- `tracker/`
+- `ukhuwwah/`
+
 ---
 
 *This application is built for the sake of Allah (SWT) and is intended to be a free tool for the Ummah.*

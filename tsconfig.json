@@ -20,5 +20,6 @@
     "esModuleInterop": true,
     "types": ["node"]
   },
-  "include": ["**/*.ts", "**/*.tsx"]
+  "include": ["*.ts", "*.tsx", "components/**/*", "hooks/**/*", "services/**/*", "api/**/*", "public/**/*"],
+  "exclude": ["src/", "node_modules/"]
 }
