@@ -201,15 +201,15 @@ export default function App() {
             </div>
         </div>
 
-        <div className="flex-1 flex flex-col justify-between min-h-0 pb-1 gap-1 w-full">
+        <div className="flex-1 flex flex-col justify-between min-h-0 pb-0.5 gap-0.5 w-full">
             {formattedPrayers.map((p) => (
-                <PrayerCard 
-                    key={p.originalKey} 
-                    prayer={p} 
-                    t={t} 
+                <PrayerCard
+                    key={p.originalKey}
+                    prayer={p}
+                    t={t}
                     locale={dateLocale}
                     onInfoClick={setSelectedPrayerInfo}
-                    className="flex-1 w-full" 
+                    className="flex-1 w-full"
                 />
             ))}
         </div>
@@ -287,7 +287,7 @@ export default function App() {
           </div>
       </div>
 
-      <main className="flex-1 w-full max-w-lg mx-auto relative flex flex-col min-h-0 px-4 pt-3">
+      <main className="flex-1 w-full max-w-lg mx-auto relative flex flex-col min-h-0 px-3 pt-2 pb-2">
          {loadingLoc && !coords && activeTab === 'prayers' ? (
              <div className="flex flex-col items-center justify-center h-full text-emerald-600">
                  <Loader2 size={32} className="animate-spin mb-4" />

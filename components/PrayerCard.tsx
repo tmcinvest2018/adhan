@@ -25,8 +25,8 @@ const getIcon = (key: string) => {
 }
 
 export const PrayerCard: React.FC<Props> = ({ prayer, t, locale, onInfoClick, className = '' }) => {
-  const baseClasses = `flex items-center justify-between p-3 rounded-2xl transition-all duration-300 w-full ${className}`;
-  const activeClasses = "bg-emerald-600 text-white shadow-lg shadow-emerald-200/50 transform scale-[1.02] z-10"; 
+  const baseClasses = `flex items-center justify-between p-2.5 rounded-2xl transition-all duration-300 w-full ${className}`;
+  const activeClasses = "bg-emerald-600 text-white shadow-lg shadow-emerald-200/50 transform scale-[1.02] z-10";
   const nextClasses = "bg-emerald-50 border border-emerald-500/30 text-emerald-900";
   const normalClasses = "bg-white text-gray-700 shadow-sm border border-gray-100/50 hover:bg-gray-50";
 
@@ -41,36 +41,36 @@ export const PrayerCard: React.FC<Props> = ({ prayer, t, locale, onInfoClick, cl
 
   return (
     <div className={finalClass}>
-      <div className="flex items-center gap-3">
-        <div className={`p-2 rounded-full ${prayer.isCurrent ? 'bg-white/20' : 'bg-emerald-50/50 text-emerald-600'}`}>
+      <div className="flex items-center gap-2.5">
+        <div className={`p-1.5 rounded-full ${prayer.isCurrent ? 'bg-white/20' : 'bg-emerald-50/50 text-emerald-600'}`}>
             {getIcon(prayer.originalKey)}
         </div>
         <div>
-          <div className="flex items-center gap-2">
-            <h3 className="font-semibold text-base leading-tight">{prayer.name}</h3>
+          <div className="flex items-center gap-1.5">
+            <h3 className="font-semibold text-sm leading-tight">{prayer.name}</h3>
             {onInfoClick && (
-                <button 
+                <button
                     onClick={(e) => { e.stopPropagation(); onInfoClick(prayer.originalKey); }}
                     className={`p-1 rounded-full hover:bg-black/10 transition-colors ${prayer.isCurrent ? 'text-white/80' : 'text-gray-400 hover:text-emerald-600'}`}
                 >
-                    <Info size={14} />
+                    <Info size={12} />
                 </button>
             )}
           </div>
           <div className="flex gap-2">
-             {prayer.isNext && <span className="text-[10px] font-bold uppercase tracking-wider opacity-70">{t.status.next}</span>}
-             {prayer.isCurrent && <span className="text-[10px] font-bold uppercase tracking-wider opacity-70">{t.status.current}</span>}
+             {prayer.isNext && <span className="text-[9px] font-bold uppercase tracking-wider opacity-70">{t.status.next}</span>}
+             {prayer.isCurrent && <span className="text-[9px] font-bold uppercase tracking-wider opacity-70">{t.status.current}</span>}
           </div>
         </div>
       </div>
-      
+
       <div className="flex flex-col items-end">
-        <div className="flex items-center gap-3">
-            <span className="text-xl font-bold tracking-tight font-mono">
+        <div className="flex items-center gap-2.5">
+            <span className="text-lg font-bold tracking-tight font-mono">
                 {format(prayer.time, 'HH:mm', { locale })}
             </span>
             <button className={`opacity-80 hover:opacity-100 ${prayer.isCurrent ? 'text-white' : 'text-gray-400'}`}>
-                 {prayer.originalKey === 'sunrise' ? <BellOff size={16} /> : <Bell size={16} />}
+                 {prayer.originalKey === 'sunrise' ? <BellOff size={14} /> : <Bell size={14} />}
             </button>
         </div>
       </div>
