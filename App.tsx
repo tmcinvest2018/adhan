@@ -222,25 +222,25 @@ export default function App() {
     if (activeTab === 'qibla') return <QiblaCompass coords={coords} t={t} />;
     if (activeTab === 'ukhuwwah') return <UkhuwwahModule t={t} />; // NEW MODULE
     if (activeTab === 'quran') return (
-        <div className="h-full flex flex-col w-full">
+        <div className="h-full flex flex-col w-full pb-24">
             <button onClick={() => setActiveTab('ilmhub')} className="flex items-center gap-2 p-2 text-gray-500 hover:text-emerald-600 font-medium">
                 <ArrowLeft size={20} /> Back to IlmHub
             </button>
             <div className="flex-1 overflow-hidden w-full">
-                <QuranModule 
-                    t={t} 
-                    language={settings.language} 
+                <QuranModule
+                    t={t}
+                    language={settings.language}
                     settings={settings}
-                    initialContext={quranContext} 
+                    initialContext={quranContext}
                 />
             </div>
         </div>
     );
     if (activeTab === 'ilmhub') return (
-        <div className="h-full overflow-y-auto no-scrollbar w-full">
-            <IlmHubModule 
-                t={t} 
-                language={settings.language} 
+        <div className="h-full overflow-y-auto no-scrollbar w-full flex-1 flex flex-col min-h-0">
+            <IlmHubModule
+                t={t}
+                language={settings.language}
                 onNavigateToQuran={(ctx) => {
                     setQuranContext(ctx);
                     setActiveTab('quran');
@@ -287,7 +287,7 @@ export default function App() {
           </div>
       </div>
 
-      <main className="flex-1 w-full max-w-lg mx-auto relative flex flex-col min-h-0 px-3 pt-2 pb-2">
+      <main className="flex-1 w-full max-w-lg mx-auto relative flex flex-col min-h-0 px-3 pt-2">
          {loadingLoc && !coords && activeTab === 'prayers' ? (
              <div className="flex flex-col items-center justify-center h-full text-emerald-600">
                  <Loader2 size={32} className="animate-spin mb-4" />

@@ -483,28 +483,28 @@ export const IlmHubModule: React.FC<Props> = ({ t, language, onNavigateToQuran, 
             ) : (
               <>
                 {activeTab === 'feed' && (
-                    <div className="space-y-4 animate-in fade-in pb-24 h-full overflow-y-auto no-scrollbar">
+                    <div className="space-y-4 animate-in fade-in h-full flex flex-col min-h-0 overflow-y-auto no-scrollbar flex-1 relative z-10">
                         <FeedHeader nextPrayer={nextPrayer} coords={coords} onNavigateToTab={onNavigateToTab} />
-                        <div className="bg-emerald-600 text-white p-6 rounded-3xl shadow-lg mb-2 mx-1 relative overflow-hidden">
-                            <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16 blur-2xl" />
-                            <h2 className="text-xs font-bold opacity-70 uppercase mb-2 tracking-widest">{t.ilmhub.feed.daily}</h2>
-                            <div className="text-lg font-bold font-serif italic leading-relaxed">
+                        <div className="bg-emerald-600 text-white p-6 rounded-3xl shadow-lg mb-2 mx-1 relative overflow-hidden z-10">
+                            <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16 blur-2xl z-0" />
+                            <h2 className="text-xs font-bold opacity-70 uppercase mb-2 tracking-widest z-10">{t.ilmhub.feed.daily}</h2>
+                            <div className="text-lg font-bold font-serif italic leading-relaxed z-10">
                                 {feedItems.find(i => i.type === 'daily_wisdom')?.content}
                             </div>
                         </div>
-                        <div className="grid gap-4 px-1 pb-10">
-                            {feedItems.filter(i => i.type !== 'daily_wisdom').map(item => 
+                        <div className="grid gap-4 px-1 pb-20 flex-1 overflow-y-auto no-scrollbar z-10">
+                            {feedItems.filter(i => i.type !== 'daily_wisdom').map(item =>
                                 item.type === 'media_highlight' ? (
-                                    <MediaCard 
-                                        key={item.id} 
-                                        item={{ id: item.id.replace('feat_media_', ''), title: item.title, author: item.source || '', type: item.mediaType as 'video' | 'audio', category: item.tags[0] as any || 'lecture', url: item.mediaUrl || '', thumbnail: item.thumbnailUrl, duration: '' }} 
+                                    <MediaCard
+                                        key={item.id}
+                                        item={{ id: item.id.replace('feat_media_', ''), title: item.title, author: item.source || '', type: item.mediaType as 'video' | 'audio', category: item.tags[0] as any || 'lecture', url: item.mediaUrl || '', thumbnail: item.thumbnailUrl, duration: '' }}
                                         isPlaying={playingMediaId === item.id.replace('feat_media_', '')}
                                         onPlay={() => setPlayingMediaId(item.id.replace('feat_media_', ''))}
                                     />
                                 ) : (
-                                    <div key={item.id} className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm flex gap-4 group hover:border-emerald-200 transition-colors">
-                                        <div className="bg-blue-50 text-blue-600 w-10 h-10 rounded-full flex items-center justify-center shrink-0 group-hover:bg-emerald-50 group-hover:text-emerald-600 transition-colors"><Sparkles size={18} /></div>
-                                        <div><h4 className="font-bold text-gray-800">{item.title}</h4><p className="text-gray-600 text-sm mt-1 leading-relaxed">{item.content}</p></div>
+                                    <div key={item.id} className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm flex gap-4 group hover:border-emerald-200 transition-colors z-10">
+                                        <div className="bg-blue-50 text-blue-600 w-10 h-10 rounded-full flex items-center justify-center shrink-0 group-hover:bg-emerald-50 group-hover:text-emerald-600 transition-colors z-10"><Sparkles size={18} /></div>
+                                        <div className="z-10"><h4 className="font-bold text-gray-800">{item.title}</h4><p className="text-gray-600 text-sm mt-1 leading-relaxed">{item.content}</p></div>
                                     </div>
                                 )
                             )}
@@ -513,32 +513,32 @@ export const IlmHubModule: React.FC<Props> = ({ t, language, onNavigateToQuran, 
                 )}
                 {activeTab === 'hisn' && (
                     hisnView === 'chapters' ? (
-                        <div className="animate-in fade-in pb-24 h-full flex flex-col overflow-y-auto no-scrollbar">
-                            <div className="bg-amber-600 text-white p-6 rounded-3xl shadow-lg flex items-center justify-between mx-1 mb-4 shrink-0">
+                        <div className="animate-in fade-in h-full flex flex-col min-h-0 overflow-y-auto no-scrollbar flex-1 relative z-10">
+                            <div className="bg-amber-600 text-white p-6 rounded-3xl shadow-lg flex items-center justify-between mx-1 mb-4 shrink-0 relative z-10">
                                 <div><h2 className="text-2xl font-bold">Hisnul Muslim</h2><p className="text-white/80 text-sm mt-1">Vesting van de Moslim</p></div>
                                 <div className="bg-white/20 p-3 rounded-full"><Shield size={24} /></div>
                             </div>
-                            <div className="grid gap-2 px-1 pb-10">
+                            <div className="grid gap-2 px-1 pb-20 flex-1 overflow-y-auto no-scrollbar relative z-10">
                                 {hisnChapters.map(chapter => (
-                                    <div key={chapter.id} onClick={() => openHisnChapter(chapter)} className="bg-white p-4 rounded-xl shadow-sm border border-gray-100 hover:border-amber-400 cursor-pointer flex items-center gap-4 transition-all active:scale-[0.99]">
-                                        <div className="w-10 h-10 rounded-lg bg-amber-50 text-amber-700 font-bold font-mono flex items-center justify-center text-sm shrink-0">{chapter.id}</div>
-                                        <div className="font-medium text-gray-800 flex-1 line-clamp-2">{chapter.title}</div>
-                                        <ChevronRight size={16} className="text-gray-400 shrink-0" />
+                                    <div key={chapter.id} onClick={() => openHisnChapter(chapter)} className="bg-white p-4 rounded-xl shadow-sm border border-gray-100 hover:border-amber-400 cursor-pointer flex items-center gap-4 transition-all active:scale-[0.99] relative z-10">
+                                        <div className="w-10 h-10 rounded-lg bg-amber-50 text-amber-700 font-bold font-mono flex items-center justify-center text-sm shrink-0 relative z-10">{chapter.id}</div>
+                                        <div className="font-medium text-gray-800 flex-1 line-clamp-2 relative z-10">{chapter.title}</div>
+                                        <ChevronRight size={16} className="text-gray-400 shrink-0 relative z-10" />
                                     </div>
                                 ))}
                             </div>
                         </div>
                     ) : (
-                        <div className="animate-in slide-in-from-right pb-24 h-full flex flex-col overflow-hidden">
-                            <div className="sticky top-0 bg-[#f0fdf4] z-10 py-4 px-1 border-b border-gray-100 mb-2 shadow-sm flex items-center gap-4 shrink-0">
-                                <button onClick={() => setHisnView('chapters')} className="p-2 bg-white rounded-xl shadow-sm text-gray-600 hover:text-amber-700 active:scale-95 transition-all"><ArrowLeft size={18} /></button>
-                                <h2 className="font-bold text-lg text-gray-800 leading-tight pr-4 truncate"><span className="text-amber-600 mr-2">#{selectedChapter?.id}</span>{selectedChapter?.title}</h2>
+                        <div className="animate-in slide-in-from-right h-full flex flex-col min-h-0 overflow-hidden flex-1 relative z-10">
+                            <div className="sticky top-0 bg-[#f0fdf4] z-20 py-4 px-1 border-b border-gray-100 mb-2 shadow-sm flex items-center gap-4 shrink-0 relative z-20">
+                                <button onClick={() => setHisnView('chapters')} className="p-2 bg-white rounded-xl shadow-sm text-gray-600 hover:text-amber-700 active:scale-95 transition-all relative z-20"><ArrowLeft size={18} /></button>
+                                <h2 className="font-bold text-lg text-gray-800 leading-tight pr-4 truncate relative z-20"><span className="text-amber-600 mr-2">#{selectedChapter?.id}</span>{selectedChapter?.title}</h2>
                             </div>
-                            <div className="space-y-6 px-2 pt-2 overflow-y-auto no-scrollbar flex-1 pb-20">
+                            <div className="space-y-6 px-2 pt-2 overflow-y-auto no-scrollbar flex-1 pb-20 relative z-10">
                                 {hisnItems.map((item, idx) => (
-                                    <div key={idx} className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-                                        <div className="p-5 bg-[#fcfcfc] border-b border-gray-50"><p className="text-right font-arabic text-2xl leading-[2.2] text-gray-800" dir="rtl">{item.arabic_text}</p></div>
-                                        <div className="p-5"><p className="text-gray-700 text-base leading-relaxed mb-6 font-serif">{item.translation}</p><div className="flex items-center gap-3 bg-gray-100 text-gray-600 px-4 py-3 rounded-xl mb-4 text-sm font-medium"><div className="bg-white p-1.5 rounded-full shadow-sm"><Repeat size={14} className="text-emerald-600" /></div><span>Aanbevolen: {item.recommended_repeat_count} keer</span></div></div>
+                                    <div key={idx} className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden relative z-10">
+                                        <div className="p-5 bg-[#fcfcfc] border-b border-gray-50 relative z-10"><p className="text-right font-arabic text-2xl leading-[2.2] text-gray-800" dir="rtl">{item.arabic_text}</p></div>
+                                        <div className="p-5 relative z-10"><p className="text-gray-700 text-base leading-relaxed mb-6 font-serif relative z-10">{item.translation}</p><div className="flex items-center gap-3 bg-gray-100 text-gray-600 px-4 py-3 rounded-xl mb-4 text-sm font-medium relative z-10"><div className="bg-white p-1.5 rounded-full shadow-sm relative z-10"><Repeat size={14} className="text-emerald-600 relative z-10" /></div><span>Aanbevolen: {item.recommended_repeat_count} keer</span></div></div>
                                     </div>
                                 ))}
                             </div>
@@ -546,84 +546,86 @@ export const IlmHubModule: React.FC<Props> = ({ t, language, onNavigateToQuran, 
                     )
                 )}
                 {activeTab === 'library' && (
-                    <div className="h-full flex flex-col min-h-0">
+                    <div className="h-full flex flex-col min-h-0 flex-1 relative z-10">
                         {libView === 'categories' ? (
-                            <div className="animate-in fade-in pb-24 h-full overflow-y-auto no-scrollbar">
-                                <div className="py-2 px-1"><h2 className="text-2xl font-bold text-gray-800 mb-2">Bibliotheek</h2></div>
-                                <div className="grid gap-4 px-1">{[{ id: 'quran_tafsir', title: 'Koran & Tafsir', icon: <BookOpen size={24} />, color: 'bg-emerald-600' }, { id: 'hadith_collections', title: 'Hadith Collecties', icon: <Library size={24} />, color: 'bg-indigo-600' }, { id: 'classical_texts', title: 'Klassieke Teksten', icon: <ScrollText size={24} />, color: 'bg-amber-600' }].map(cat => <div key={cat.id} onClick={() => { setSelectedCategory(cat.id); setLibView('books'); }} className={`${cat.color} text-white p-6 rounded-3xl shadow-lg cursor-pointer flex items-center justify-between active:scale-[0.98] transition-transform`}><div><h3 className="text-xl font-bold">{cat.title}</h3><p className="text-white/80 text-sm mt-1">Blader door collectie</p></div><div className="bg-white/20 p-3 rounded-full">{cat.icon}</div></div>)}</div>
+                            <div className="animate-in fade-in h-full flex flex-col min-h-0 overflow-y-auto no-scrollbar flex-1 relative z-10">
+                                <div className="py-2 px-1 relative z-10"><h2 className="text-2xl font-bold text-gray-800 mb-2 relative z-10">Bibliotheek</h2></div>
+                                <div className="grid gap-4 px-1 flex-1 overflow-y-auto no-scrollbar relative z-10">{[{ id: 'quran_tafsir', title: 'Koran & Tafsir', icon: <BookOpen size={24} />, color: 'bg-emerald-600' }, { id: 'hadith_collections', title: 'Hadith Collecties', icon: <Library size={24} />, color: 'bg-indigo-600' }, { id: 'classical_texts', title: 'Klassieke Teksten', icon: <ScrollText size={24} />, color: 'bg-amber-600' }].map(cat => <div key={cat.id} onClick={() => { setSelectedCategory(cat.id); setLibView('books'); }} className={`${cat.color} text-white p-6 rounded-3xl shadow-lg cursor-pointer flex items-center justify-between active:scale-[0.98] transition-transform relative z-10`}><div><h3 className="text-xl font-bold relative z-10">{cat.title}</h3><p className="text-white/80 text-sm mt-1 relative z-10">Blader door collectie</p></div><div className="bg-white/20 p-3 rounded-full relative z-10">{cat.icon}</div></div>)}</div>
                             </div>
                         ) : libView === 'books' ? (
-                            <div className="animate-in slide-in-from-right pb-24 h-full flex flex-col"><Breadcrumb /><div className="grid grid-cols-2 gap-3 mt-1 px-1 overflow-y-auto no-scrollbar pb-10">{catalog.filter(b => b.category === selectedCategory).map(book => (<div key={book.id} onClick={() => openBook(book)} className="bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex flex-col h-48 justify-between active:scale-[0.98] transition-transform"><div><div className={`w-8 h-8 rounded-lg mb-3 ${book.coverColor || 'bg-gray-500'} flex items-center justify-center text-white`}><Book size={16} /></div><h4 className="font-bold text-gray-800 leading-tight line-clamp-2">{book.title}</h4></div><div className="bg-gray-50 p-2 rounded-full text-gray-400 w-fit self-end"><ChevronRight size={16} /></div></div>))}</div></div>
+                            <div className="animate-in slide-in-from-right h-full flex flex-col flex-1 relative z-10"><Breadcrumb /><div className="grid grid-cols-2 gap-3 mt-1 px-1 flex-1 overflow-y-auto no-scrollbar pb-20 relative z-10">{catalog.filter(b => b.category === selectedCategory).map(book => (<div key={book.id} onClick={() => openBook(book)} className="bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex flex-col justify-between active:scale-[0.98] transition-transform relative z-10"><div><div className={`w-8 h-8 rounded-lg mb-3 ${book.coverColor || 'bg-gray-500'} flex items-center justify-center text-white relative z-10`}><Book size={16} /></div><h4 className="font-bold text-gray-800 leading-tight line-clamp-2 relative z-10">{book.title}</h4></div><div className="bg-gray-50 p-2 rounded-full text-gray-400 w-fit self-end relative z-10"><ChevronRight size={16} /></div></div>))}</div></div>
                         ) : libView === 'structure' ? (
-                            <div className="animate-in slide-in-from-right pb-24 h-full flex flex-col relative"><Breadcrumb />{isDownloading && <div className="absolute inset-0 z-50 bg-white/80 backdrop-blur-sm flex flex-col items-center justify-center rounded-2xl"><Loader2 size={40} className="animate-spin text-emerald-600 mb-4" /><h3 className="font-bold text-gray-800">Boek downloaden...</h3></div>}<div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden flex-1 flex flex-col mx-1 min-h-0"><div className="p-4 bg-gray-50 border-b border-gray-100 flex justify-between items-center"><h2 className="font-bold text-lg truncate">{selectedBook?.title}</h2></div><div className="divide-y divide-gray-50 overflow-y-auto flex-1 no-scrollbar">{loadingStructure ? (<div className="flex flex-col items-center justify-center p-12 text-gray-400"><Loader2 className="animate-spin mb-4" size={32} /><span>Index laden...</span></div>) : bookStructure.map((node, index) => (<div key={node.id} className="p-4 hover:bg-emerald-50 cursor-pointer flex justify-between items-center transition-colors"><div className="flex-1 flex items-center gap-3" onClick={() => handleChapterClick(node)}><span className="w-8 h-8 flex items-center justify-center bg-gray-100 rounded-full text-xs font-bold text-gray-500 shrink-0">{node.number || '#'}</span><span className="text-sm font-medium text-gray-700 line-clamp-1">{node.title}</span></div><div className="flex items-center gap-2">{node.audioUrl && <button onClick={(e) => { e.stopPropagation(); playTrack(index); }} className={`p-2 rounded-full ${playingTrackIndex === index ? 'bg-emerald-600 text-white' : 'bg-gray-100 text-gray-400'}`}>{playingTrackIndex === index && isPlaying ? <Pause size={16} fill="currentColor" /> : <Play size={16} fill="currentColor" />}</button>}<ChevronRight size={16} className="text-gray-300" /></div></div>))}</div></div></div>
+                            <div className="animate-in slide-in-from-right h-full flex flex-col relative flex-1 relative z-10"><Breadcrumb />{isDownloading && <div className="absolute inset-0 z-50 bg-white/80 backdrop-blur-sm flex flex-col items-center justify-center rounded-2xl"><Loader2 size={40} className="animate-spin text-emerald-600 mb-4" /><h3 className="font-bold text-gray-800">Boek downloaden...</h3></div>}<div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden flex-1 flex flex-col mx-1 min-h-0 relative z-10"><div className="p-4 bg-gray-50 border-b border-gray-100 flex justify-between items-center relative z-10"><h2 className="font-bold text-lg truncate relative z-10">{selectedBook?.title}</h2></div><div className="divide-y divide-gray-50 overflow-y-auto flex-1 no-scrollbar relative z-10">{loadingStructure ? (<div className="flex flex-col items-center justify-center p-12 text-gray-400 relative z-10"><Loader2 className="animate-spin mb-4" size={32} /><span>Index laden...</span></div>) : bookStructure.map((node, index) => (<div key={node.id} className="p-4 hover:bg-emerald-50 cursor-pointer flex justify-between items-center transition-colors relative z-10"><div className="flex-1 flex items-center gap-3" onClick={() => handleChapterClick(node)}><span className="w-8 h-8 flex items-center justify-center bg-gray-100 rounded-full text-xs font-bold text-gray-500 shrink-0 relative z-10">{node.number || '#'}</span><span className="text-sm font-medium text-gray-700 line-clamp-1 relative z-10">{node.title}</span></div><div className="flex items-center gap-2 relative z-10">{node.audioUrl && <button onClick={(e) => { e.stopPropagation(); playTrack(index); }} className={`p-2 rounded-full ${playingTrackIndex === index ? 'bg-emerald-600 text-white' : 'bg-gray-100 text-gray-400'} relative z-10`}>{playingTrackIndex === index && isPlaying ? <Pause size={16} fill="currentColor" /> : <Play size={16} fill="currentColor" />}</button>}<ChevronRight size={16} className="text-gray-300 relative z-10" /></div></div>))}</div></div></div>
                         ) : (
-                            <div className="animate-in slide-in-from-right pb-24 h-full flex flex-col"><Breadcrumb /><div className="bg-white p-4 flex-1 overflow-y-auto bg-gray-50/50 mx-1 rounded-2xl shadow-inner no-scrollbar">{Array.isArray(sectionContent) && sectionContent.length === 0 ? (<div className="flex flex-col items-center justify-center h-64 text-gray-400"><Loader2 size={32} className="animate-spin text-emerald-600 mb-4" /><p>Inhoud laden...</p></div>) : Array.isArray(sectionContent) && (sectionContent[0] as HadithData).hadithnumber !== undefined ? (<div className="space-y-6">{(sectionContent as HadithData[]).map((hadith, idx) => (<div key={idx} className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden"><div className="bg-gray-50 border-b border-gray-100 px-4 py-2 flex justify-between items-center"><span className="text-xs font-bold text-gray-500 uppercase">Hadith #{hadith.hadithnumber}</span></div><div className="p-5">{hadith.arabicText && (<p className="text-right font-arabic text-2xl leading-[2.2] text-gray-800 mb-6" dir="rtl">{hadith.arabicText}</p>)}<p className="text-gray-700 leading-relaxed text-sm mb-4 font-serif">{hadith.translationText || hadith.text}</p>{hadith.grades && hadith.grades.length > 0 && (<div className="flex flex-wrap gap-2 mt-4 pt-4 border-t border-gray-50">{hadith.grades.map((grade, gIdx) => (<div key={gIdx} className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold uppercase border ${getGradeColor(grade.grade)}`}>{grade.grade}<span>{grade.name}</span></div>))}</div>)}</div></div>))}</div>) : (<div className="prose prose-emerald max-w-none text-gray-700 whitespace-pre-line leading-loose text-lg pb-10">{typeof sectionContent === 'string' ? sectionContent : 'Inhoud geladen'}</div>)}</div></div>
+                            <div className="animate-in slide-in-from-right h-full flex flex-col flex-1 relative z-10"><Breadcrumb /><div className="bg-white p-4 flex-1 overflow-y-auto bg-gray-50/50 mx-1 rounded-2xl shadow-inner no-scrollbar relative z-10">{Array.isArray(sectionContent) && sectionContent.length === 0 ? (<div className="flex flex-col items-center justify-center flex-1 text-gray-400 relative z-10"><Loader2 size={32} className="animate-spin text-emerald-600 mb-4" /><p>Inhoud laden...</p></div>) : Array.isArray(sectionContent) && (sectionContent[0] as HadithData).hadithnumber !== undefined ? (<div className="space-y-6 flex-1 overflow-y-auto no-scrollbar relative z-10">{(sectionContent as HadithData[]).map((hadith, idx) => (<div key={idx} className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden relative z-10"><div className="bg-gray-50 border-b border-gray-100 px-4 py-2 flex justify-between items-center relative z-10"><span className="text-xs font-bold text-gray-500 uppercase relative z-10">Hadith #{hadith.hadithnumber}</span></div><div className="p-5 relative z-10">{hadith.arabicText && (<p className="text-right font-arabic text-2xl leading-[2.2] text-gray-800 mb-6 relative z-10" dir="rtl">{hadith.arabicText}</p>)}<p className="text-gray-700 leading-relaxed text-sm mb-4 font-serif relative z-10">{hadith.translationText || hadith.text}</p>{hadith.grades && hadith.grades.length > 0 && (<div className="flex flex-wrap gap-2 mt-4 pt-4 border-t border-gray-50 relative z-10">{hadith.grades.map((grade, gIdx) => (<div key={gIdx} className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold uppercase border ${getGradeColor(grade.grade)} relative z-10`}>{grade.grade}<span>{grade.name}</span></div>))}</div>)}</div></div>))}</div>) : (<div className="prose prose-emerald max-w-none text-gray-700 whitespace-pre-line leading-loose text-lg pb-10 flex-1 overflow-y-auto no-scrollbar relative z-10">{typeof sectionContent === 'string' ? sectionContent : 'Inhoud geladen'}</div>)}</div></div>
                         )}
                     </div>
                 )}
                 {activeTab === 'media' && (
-                    <div className="pb-24 px-1 space-y-4 pt-2 h-full overflow-y-auto no-scrollbar relative">
+                    <div className="px-1 space-y-4 pt-2 flex flex-col flex-1 overflow-y-auto no-scrollbar relative h-[calc(100vh-140px)]">
                         <div className="flex justify-between items-center px-1 mb-2">
                             <h2 className="text-xl font-bold text-gray-800">Video Bibliotheek</h2>
-                            <button 
+                            <button
                                 onClick={loadMedia}
                                 className={`p-2 rounded-xl bg-white border border-gray-100 shadow-sm text-emerald-600 transition-transform active:rotate-180 ${isLoadingMedia ? 'animate-spin' : ''}`}
                             >
                                 <RefreshCw size={18} />
                             </button>
                         </div>
-                        
+
+                        <div className="flex-1 overflow-y-auto no-scrollbar pb-20">
                         {isLoadingMedia && mediaItems.length === 0 ? (
-                            <div className="flex flex-col items-center justify-center py-20 text-gray-400">
+                            <div className="flex flex-col items-center justify-center h-full text-gray-400">
                                 <Loader2 className="animate-spin mb-4" size={40} />
                                 <p className="font-bold">Media ophalen...</p>
                             </div>
                         ) : mediaItems.length === 0 ? (
-                            <div className="flex flex-col items-center justify-center py-20 text-gray-400 text-center">
+                            <div className="flex flex-col items-center justify-center h-full text-gray-400 text-center">
                                 <Video size={48} className="mb-4 opacity-10" />
                                 <p className="font-bold">Geen media gevonden.</p>
                                 <button onClick={loadMedia} className="mt-4 text-emerald-600 font-bold underline">Opnieuw proberen</button>
                             </div>
                         ) : (
                             mediaItems.map(m => (
-                                <MediaCard 
-                                    key={m.id} 
-                                    item={m} 
-                                    isPlaying={playingMediaId === m.id} 
-                                    onPlay={() => setPlayingMediaId(m.id)} 
+                                <MediaCard
+                                    key={m.id}
+                                    item={m}
+                                    isPlaying={playingMediaId === m.id}
+                                    onPlay={() => setPlayingMediaId(m.id)}
                                 />
                             ))
                         )}
+                        </div>
                     </div>
                 )}
                 {activeTab === 'ai' && (
-                    <div className="flex flex-col h-full pb-4 mx-1">
-                        <div className="flex-1 bg-white rounded-3xl shadow-inner border border-gray-100 overflow-y-auto p-4 space-y-4 no-scrollbar" ref={scrollRef}>
+                    <div className="flex flex-col h-full mx-1 flex-1 min-h-0 relative z-10">
+                        <div className="flex-1 bg-white rounded-3xl shadow-inner border border-gray-100 overflow-y-auto p-4 space-y-4 no-scrollbar flex-1 min-h-0 relative z-10" ref={scrollRef}>
                             {messages.map(m => (
-                                <div key={m.id} className={`flex flex-col ${m.role === 'user' ? 'items-end' : 'items-start'}`}>
-                                    <div className={`p-4 rounded-2xl max-w-[90%] text-sm leading-relaxed shadow-sm ${m.role === 'user' ? 'bg-emerald-600 text-white rounded-tr-none' : 'bg-gray-100 text-gray-800 rounded-tl-none'}`}>
+                                <div key={m.id} className={`flex flex-col ${m.role === 'user' ? 'items-end' : 'items-start'} relative z-10`}>
+                                    <div className={`p-4 rounded-2xl max-w-[90%] text-sm leading-relaxed shadow-sm ${m.role === 'user' ? 'bg-emerald-600 text-white rounded-tr-none' : 'bg-gray-100 text-gray-800 rounded-tl-none'} relative z-10`}>
                                         {m.text}
                                     </div>
                                     {m.role === 'assistant' && aiSources.length > 0 && messages[messages.length-1].id === m.id && (
-                                        <div className="mt-3 w-full animate-in fade-in slide-in-from-top-2">
-                                            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest px-1 mb-2">Bronnen gebruikt:</p>
-                                            <div className="flex flex-wrap gap-2">
+                                        <div className="mt-3 w-full animate-in fade-in slide-in-from-top-2 relative z-10">
+                                            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest px-1 mb-2 relative z-10">Bronnen gebruikt:</p>
+                                            <div className="flex flex-wrap gap-2 relative z-10">
                                                 {aiSources.map(s => (
-                                                    <button key={s.id} onClick={() => handleSearchResultClick(s)} className="bg-emerald-50 border border-emerald-100 px-3 py-1.5 rounded-full text-[11px] font-bold text-emerald-700 flex items-center gap-1.5 hover:bg-emerald-100 transition-colors shadow-sm"><FileText size={12} /> {s.title}</button>
+                                                    <button key={s.id} onClick={() => handleSearchResultClick(s)} className="bg-emerald-50 border border-emerald-100 px-3 py-1.5 rounded-full text-[11px] font-bold text-emerald-700 flex items-center gap-1.5 hover:bg-emerald-100 transition-colors shadow-sm relative z-10"><FileText size={12} /> {s.title}</button>
                                                 ))}
                                             </div>
                                         </div>
                                     )}
                                     {m.role === 'assistant' && aiSuggestions.length > 0 && messages[messages.length-1].id === m.id && (
-                                        <div className="mt-4 w-full space-y-2 animate-in fade-in slide-in-from-top-4">
-                                            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest px-1">Aanbevolen Video's:</p>
-                                            <div className="grid grid-cols-1 gap-3">
+                                        <div className="mt-4 w-full space-y-2 animate-in fade-in slide-in-from-top-4 relative z-10">
+                                            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest px-1 relative z-10">Aanbevolen Video's:</p>
+                                            <div className="grid grid-cols-1 gap-3 relative z-10">
                                                 {aiSuggestions.map(v => (
-                                                    <MediaCard 
-                                                        key={v.id} 
-                                                        item={v} 
-                                                        isPlaying={playingMediaId === v.id} 
-                                                        onPlay={() => setPlayingMediaId(v.id)} 
+                                                    <MediaCard
+                                                        key={v.id}
+                                                        item={v}
+                                                        isPlaying={playingMediaId === v.id}
+                                                        onPlay={() => setPlayingMediaId(v.id)}
                                                     />
                                                 ))}
                                             </div>
@@ -631,11 +633,11 @@ export const IlmHubModule: React.FC<Props> = ({ t, language, onNavigateToQuran, 
                                     )}
                                 </div>
                             ))}
-                            {isTyping && <div className="text-gray-400 text-[10px] font-bold animate-pulse px-2 flex items-center gap-2"><Bot size={14} /> Al-Noor analyseert...</div>}
+                            {isTyping && <div className="text-gray-400 text-[10px] font-bold animate-pulse px-2 flex items-center gap-2 relative z-10"><Bot size={14} /> Al-Noor analyseert...</div>}
                         </div>
-                        <div className="p-2 bg-white border border-gray-100 rounded-2xl mt-3 flex gap-2 shadow-sm flex-none">
-                            <input value={chatInput} onChange={e => setChatInput(e.target.value)} onKeyDown={e => e.key === 'Enter' && handleSendMessage()} placeholder="Stel uw vraag..." className="flex-1 bg-transparent border-none rounded-xl px-3 py-2 outline-none focus:ring-0 text-sm" />
-                            <button onClick={handleSendMessage} className="bg-emerald-600 text-white p-2.5 rounded-xl hover:bg-emerald-700 transition-colors shadow-md"><Send size={18} /></button>
+                        <div className="p-2 bg-white border border-gray-100 rounded-2xl mt-3 flex gap-2 shadow-sm flex-none relative z-10">
+                            <input value={chatInput} onChange={e => setChatInput(e.target.value)} onKeyDown={e => e.key === 'Enter' && handleSendMessage()} placeholder="Stel uw vraag..." className="flex-1 bg-transparent border-none rounded-xl px-3 py-2 outline-none focus:ring-0 text-sm relative z-10" />
+                            <button onClick={handleSendMessage} className="bg-emerald-600 text-white p-2.5 rounded-xl hover:bg-emerald-700 transition-colors shadow-md relative z-10"><Send size={18} /></button>
                         </div>
                     </div>
                 )}
